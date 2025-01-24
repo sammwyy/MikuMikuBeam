@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently --ks SIGKILL -n \"Client,Server\" \"npm run dev:client\" \"npm run dev:server\"",
+    "dev": "concurrently --ks SIGKILL -n \"Client,Server\" \"bun run dev:client\" \"bun run dev:server\"",
     "dev:server": "tsx watch server/",
     "dev:client": "vite",
     "build": "vite build",
