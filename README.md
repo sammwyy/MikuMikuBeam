@@ -25,7 +25,7 @@ A fun and visually appealing stress testing server with a **Miku-themed** fronte
 Make sure you have the following installed:
 
 - Node.js (v14 or above) 🌱
-- npm (Node Package Manager) 📦
+- Bun (Latest version) 🍞
 
 ### Installation 💻
 
@@ -39,7 +39,7 @@ Make sure you have the following installed:
 2. Install the required dependencies:
 
    ```bash
-   npm install
+   bun install
    ```
 
 3. Create the necessary files:
@@ -49,7 +49,7 @@ Make sure you have the following installed:
 4. Run the server:
 
    ```bash
-   npm run dev
+   bun run dev
    ```
 
    The server will run on port `3000` by default. 🌐
@@ -134,7 +134,7 @@ const attackHandlers = {
 
 > 2. It crashes on startup, giving a "concurrently" error.
 
-**Re:** Try running two terminals instead of one, in the first one use "npm run dev:client", and in the other one "npm run dev:server". (This happened to several people with Windows 11)
+**Re:** Try running two terminals instead of one, in the first one use "bun run dev:client", and in the other one "bun run dev:server". (This happened to several people with Windows 11)
 
 > 3. I go to "http://localhost:3000" and nothing appears.
 
