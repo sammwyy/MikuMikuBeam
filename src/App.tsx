@@ -461,6 +461,8 @@ function App() {
               </div>
             </div>
           </div>
+          {/*Attack method description*/}
+          <div>Idk what to put here</div>
 
           {/* Stats Widgets */}
           <div className="grid grid-cols-3 gap-4 mb-6">
