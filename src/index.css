@@ -164,3 +164,8 @@ how to remove the vertical space around the range input in IE*/
     /*Edge starts the margin from the thumb, not the track as other browsers do*/
   }
 }
+
+#description {
+  width: 100%;
+  /*border:1px solid rgba(236, 72, 153, 1);*/
+}
