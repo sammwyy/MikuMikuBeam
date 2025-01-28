@@ -266,6 +266,22 @@ function App() {
     setIsAttacking(false);
   };
 
+  const descriptions = {
+    'http flood': 'Sends random HTTP requests to the target',
+    'http bypass': 'Sends HTTP requests to the target, mimicking real requests',
+    'http slowloris': 'Sends random HTTP requests to the target, while keeping the connection open',
+    'tcp flood': 'Sends random TCP requests to the target',
+    'minecraft ping': 'Sends Minecraft ping requests to the target'
+  };
+
+  const emojis = {
+    'http flood': '🌊',
+    'http bypass': '🚀',
+    'http slowloris': '🦥',
+    'tcp flood': '📶',
+    'minecraft ping': '⛏'
+  }
+
   return (
     <div
       className={`w-screen h-screen bg-gradient-to-br ${
@@ -462,7 +478,19 @@ function App() {
             </div>
           </div>
           {/*Attack method description*/}
-          <div className = "w-full px-4 py-2 border border-pink-200 rounded-lg outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200" id="description">{attackMethod}</div>
+          <label
+                  className={`block mb-1 text-sm font-medium ${
+                    animState === 0 || animState === 3
+                      ? "text-gray-700"
+                      : "text-white"
+                  }`}
+                >
+                  Attack description
+                </label>
+          <div className = "w-full px-4 py-2 border border-pink-200 rounded-lg outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200" id="description">{attackMethod.replaceAll(/_/ig, ' ') + ' ' + emojis[attackMethod.replaceAll(/_/ig, ' ')]}: <div className={animState === 0 || animState === 3
+                      ? "text-gray-700"
+                      : "text-white" + "regularText"}>{descriptions[attackMethod.replaceAll(/_/ig, ' ')]}</div></div>
+
           <br/>
           {/* Stats Widgets */}
           <div className="grid grid-cols-3 gap-4 mb-6">

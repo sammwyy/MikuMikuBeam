@@ -167,5 +167,14 @@ how to remove the vertical space around the range input in IE*/
 
 #description {
   width: 100%;
+  color: rgba(236, 72, 153, 1);
+  font-weight: bolder;
+}
+
+.regularText {
+  display: inline;
+  color: black;
+  font-weight: normal;
   /*border:1px solid rgba(236, 72, 153, 1);*/
+
 }
