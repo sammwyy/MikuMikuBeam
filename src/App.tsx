@@ -390,6 +390,7 @@ function App() {
                   <option value="http_bypass">HTTP/Bypass</option>
                   <option value="http_slowloris">HTTP/Slowloris</option>
                   <option value="tcp_flood">TCP/Flood</option>
+                  <option value="udp_flood">UDP/Flood</option>
                   <option value="minecraft_ping">Minecraft/Ping</option>
                 </select>
               </div>
