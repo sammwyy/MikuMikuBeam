@@ -19,6 +19,7 @@ A fun and visually appealing stress testing server with a **Miku-themed** fronte
   - `HTTP Slowloris` - Send HTTP requests and keep the connection open
   - `Minecraft Ping` - Send Minecraft ping/motd requests
   - `TCP Flood` - Send random TCP packets
+  - `UDP Flood` - Send random UDP packets
 
 ## Setup 🛠️
 

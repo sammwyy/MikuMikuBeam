@@ -17,6 +17,7 @@ const attackWorkers: { [key in AttackMethod]: string } = {
   http_bypass: "./workers/httpBypassAttack.js",
   http_slowloris: "./workers/httpSlowlorisAttack.js",
   tcp_flood: "./workers/tcpFloodAttack.js",
+  udp_flood: "./workers/udpFloodAttack.js",
   minecraft_ping: "./workers/minecraftPingAttack.js",
 };
 
