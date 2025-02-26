@@ -76,7 +76,7 @@ function ConfigureProxiesAndAgentsView() {
       {loadingConfiguration ? (
         <div className="flex flex-col items-center justify-center space-y-2">
           <img src="/loading.gif" className="rounded-sm shadow-sm" />
-          <p>Loading proxies.txt and uas.txt...</p>
+          <p>Cargando proxies.txt y uas.txt...</p>
         </div>
       ) : (
         <div className="w-[56rem] flex flex-col">
@@ -102,7 +102,7 @@ function ConfigureProxiesAndAgentsView() {
             onClick={saveConfiguration}
             className="p-4 mt-4 text-white bg-gray-800 rounded-md hover:bg-gray-900"
           >
-            Write Changes
+            Guardar Cambios
           </button>
         </div>
       )}
@@ -222,7 +222,7 @@ function App() {
 
   const startAttack = (isQuick?: boolean) => {
     if (!target.trim()) {
-      alert("Please enter a target!");
+      alert("¡Por favor introduce un objetivo!");
       return;
     }
 
@@ -232,7 +232,7 @@ function App() {
       bots: old.bots,
       totalPackets: 0,
     }));
-    addLog("🍮 Preparing attack...");
+    addLog("🍮 Preparando ataque...");
 
     // Play audio
     if (audioRef.current) {
@@ -290,8 +290,7 @@ function App() {
                 : "text-white"
             }`}
           >
-            Because DDoS attacks are also cute and even more so when Miku does
-            them.
+            Porque los ataques DDoS también son tiernos y más aún cuando los hace Miku.
           </p>
         </div>
 
@@ -320,7 +319,7 @@ function App() {
                 type="text"
                 value={target}
                 onChange={(e) => setTarget(e.target.value)}
-                placeholder="Enter target URL or IP"
+                placeholder="Introduzca la URL o IP objetivo"
                 className={`${
                   animState === 0 || animState === 3 ? "" : "text-white"
                 } px-4 py-2 border border-pink-200 rounded-lg outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200`}
@@ -376,7 +375,7 @@ function App() {
                       : "text-white"
                   }`}
                 >
-                  Attack Method
+                  Método de ataque
                 </label>
                 <select
                   value={attackMethod}
@@ -401,7 +400,7 @@ function App() {
                       : "text-white"
                   }`}
                 >
-                  Packet Size (kb)
+                  Tamaño paquete (kb)
                 </label>
                 <input
                   type="number"
@@ -423,7 +422,7 @@ function App() {
                       : "text-white"
                   }`}
                 >
-                  Duration (seconds)
+                  Duración (segundos)
                 </label>
                 <input
                   type="number"
@@ -445,7 +444,7 @@ function App() {
                       : "text-white"
                   }`}
                 >
-                  Packet Delay (ms)
+                  Tiempo paquete (ms)
                 </label>
                 <input
                   type="number"
@@ -467,7 +466,7 @@ function App() {
             <div className="p-4 rounded-lg bg-gradient-to-br from-pink-500/10 to-blue-500/10">
               <div className="flex items-center gap-2 mb-2 text-pink-600">
                 <Zap className="w-4 h-4" />
-                <span className="font-semibold">Packets/sec</span>
+                <span className="font-semibold">Paquetes/sec</span>
               </div>
               <div
                 className={`text-2xl font-bold ${
@@ -482,7 +481,7 @@ function App() {
             <div className="p-4 rounded-lg bg-gradient-to-br from-pink-500/10 to-blue-500/10">
               <div className="flex items-center gap-2 mb-2 text-pink-600">
                 <Bot className="w-4 h-4" />
-                <span className="font-semibold">Active Bots</span>
+                <span className="font-semibold">Bots Activos</span>
               </div>
               <div
                 className={`text-2xl font-bold ${
@@ -497,7 +496,7 @@ function App() {
             <div className="p-4 rounded-lg bg-gradient-to-br from-pink-500/10 to-blue-500/10">
               <div className="flex items-center gap-2 mb-2 text-pink-600">
                 <Wifi className="w-4 h-4" />
-                <span className="font-semibold">Total Packets</span>
+                <span className="font-semibold">Paquetes Totales</span>
               </div>
               <div
                 className={`text-2xl font-bold ${
@@ -552,11 +551,11 @@ function App() {
           <span className="text-sm text-center text-gray-500">
             🎵 v1.0 made by{" "}
             <a
-              href="https://github.com/sammwyy/mikumikubeam"
+              href="https://upkuma.miguerubsk.ddns.net/status/general"
               target="_blank"
               rel="noreferrer"
             >
-              @Sammwy
+              @miguerubsk
             </a>{" "}
             🎵
           </span>

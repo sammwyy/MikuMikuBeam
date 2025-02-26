@@ -37,19 +37,19 @@ const io = new Server(httpServer, {
 const proxies = loadProxies();
 const userAgents = loadUserAgents();
 
-console.log("Proxies loaded:", proxies.length);
-console.log("User agents loaded:", userAgents.length);
+console.log("Proxies cargados:", proxies.length);
+console.log("Agentes de Usuario cargados:", userAgents.length);
 
 app.use(express.static(join(__dirname, "public")));
 
 io.on("connection", (socket) => {
-  console.log("Client connected");
+  console.log("Cliente conectado");
 
   socket.emit("stats", {
     pps: 0,
     bots: proxies.length,
     totalPackets: 0,
-    log: "🍤 Connected to the server.",
+    log: "🍤 Conectado al servidor.",
   });
 
   socket.on("startAttack", (params) => {
@@ -59,13 +59,13 @@ io.on("connection", (socket) => {
 
     if (!attackWorkerFile) {
       socket.emit("stats", {
-        log: `❌ Unsupported attack type: ${attackMethod}`,
+        log: `❌ Tipo de Ataque no Soportado: ${attackMethod}`,
       });
       return;
     }
 
     socket.emit("stats", {
-      log: `🍒 Using ${filteredProxies.length} filtered proxies to perform attack.`,
+      log: `🍒 Usando ${filteredProxies.length} proxies filtrados para realizar el ataque.`,
       bots: filteredProxies.length,
     });
 
@@ -84,11 +84,11 @@ io.on("connection", (socket) => {
 
     worker.on("error", (error) => {
       console.error(`Worker error: ${error.message}`);
-      socket.emit("stats", { log: `❌ Worker error: ${error.message}` });
+      socket.emit("stats", { log: `❌ Error de Trabajador: ${error.message}` });
     });
 
     worker.on("exit", (code) => {
-      console.log(`Worker exited with code ${code}`);
+      console.log(`Trabajador terminado con código ${code}`);
       socket.emit("attackEnd");
     });
 
@@ -160,7 +160,7 @@ const PORT = parseInt(process.env.PORT || "3000");
 httpServer.listen(PORT, () => {
   if (__prod) {
     console.log(
-      `(Production Mode) Client and server is running under http://localhost:${PORT}`
+      `(Production Mode) Cliente y servidor corriendo en http://localhost:${PORT}`
     );
   } else {
     console.log(`Server is running under development port ${PORT}`);
