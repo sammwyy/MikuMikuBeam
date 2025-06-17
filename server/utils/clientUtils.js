@@ -14,7 +14,13 @@ export function createAgent(proxy) {
       : ""
   }${proxy.host}:${proxy.port}`;
 
-  return new SocksProxyAgent(uri);
+  // return new SocksProxyAgent(uri);
+  return new SocksProxyAgent({
+    hostname: proxy.host,
+    port: proxy.port,
+    protocol: proxy.protocol + ":",
+    rejectUnauthorized: false,
+  });
 }
 
 // HTTP Client
@@ -58,6 +64,11 @@ export function createHttpClient(
     config.proxy = false;
     config.httpAgent = agent;
     config.httpsAgent = agent;
+    
+    // Just to be extra sure
+    if (config.httpsAgent?.options) {
+      config.httpsAgent.options.rejectUnauthorized = false;
+    }
   } else {
     throw new Error(
       "Unsupported proxy protocol for HTTP client: " + proxy.protocol
