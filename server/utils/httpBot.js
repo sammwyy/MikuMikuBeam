@@ -73,7 +73,7 @@ export default class HTTPBot {
       const assets = this.getAssets($, url);
 
       // Download all assets
-      for (let asset of assets) {
+      for (const asset of assets) {
         await this.getRequest(asset);
       }
 

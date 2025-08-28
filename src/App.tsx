@@ -138,7 +138,7 @@ function App() {
     if (audioRef.current) {
       const audio = audioRef.current;
       const handler = () => {
-        if (audio.paused) return;
+        if (audio.paused) {return;}
 
         if (
           animState !== 2 &&
@@ -196,7 +196,7 @@ function App() {
         bots: data.bots || old.bots,
         totalPackets: data.totalPackets || old.totalPackets,
       }));
-      if (data.log) addLog(data.log);
+      if (data.log) {addLog(data.log);}
       setProgress((prev) => (prev + 10) % 100);
     });
 
@@ -241,7 +241,7 @@ function App() {
       audioRef.current.play();
     }
 
-    if (!isQuick) setAnimState(1);
+    if (!isQuick) {setAnimState(1);}
 
     // Start attack after audio intro
     const timeout = setTimeout(

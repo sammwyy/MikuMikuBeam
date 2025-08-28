@@ -36,15 +36,25 @@ export function loadProxies(): Proxy[] {
     const [protocol, loginInfo] = line.split("://");
 
     if (authProxiesRegEx.test(line)) {
-      const [auth, addr] = loginInfo.split("@");
-      const [user, pass] = auth.split(":");
-      const [host, port] = addr.split(":");
+      const [auth, addr] = loginInfo!.split("@");
+      const [user, pass] = auth!.split(":");
+      const [host, port] = addr!.split(":");
 
-      return { protocol, host, port: parseInt(port), username: user, password: pass };
+      return { 
+        protocol: protocol || "http", 
+        host: host || "localhost", 
+        port: parseInt(port || "8080"), 
+        username: user || undefined, 
+        password: pass || undefined 
+      };
     } else {
-      const [host, port] = loginInfo.split(":");
+      const [host, port] = loginInfo!.split(":");
 
-      return { protocol, host, port: parseInt(port) };
+      return { 
+        protocol: protocol || "http", 
+        host: host || "localhost", 
+        port: parseInt(port || "8080") 
+      };
     }
   });
 }

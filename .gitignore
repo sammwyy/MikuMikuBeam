@@ -7,14 +7,38 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
 dist
 dist-ssr
 *.local
 
+# Environment variables
+.env
+.env.local
+.env.production
+.env.staging
+
+# Testing
+coverage
+.nyc_output
+test-results
+playwright-report
+playwright/.cache
+
+# Build outputs
+build
+out
+.next
+.nuxt
+.vuepress/dist
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
 .idea
 .DS_Store
 *.suo
@@ -22,3 +46,26 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# SSL certificates
+ssl/
+*.pem
+*.key
+*.crt
+
+# Data files (keep structure but ignore content)
+data/*.txt
+!data/.gitkeep
+
+# Docker
+.dockerignore
+
+# Temporary files
+*.tmp
+*.temp
+.cache
