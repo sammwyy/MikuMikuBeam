@@ -4,32 +4,58 @@ A fun and visually appealing stress testing server with a **Miku-themed** fronte
 
 ![Screenshot](docs/screenshot.png)
 
+## ✨ What's New in v1.0.0
+
+- 🔒 **Enhanced Security**: Added Helmet.js, CORS protection, and rate limiting
+- 🚀 **Performance Improvements**: Multi-stage Docker builds, compression, and caching
+- 🧪 **Testing Framework**: Integrated Vitest with comprehensive test setup
+- 📊 **Better Monitoring**: Health checks, structured logging, and error handling
+- 🐳 **Production Ready**: Optimized Docker setup with Nginx reverse proxy
+- 🔧 **Developer Experience**: Improved TypeScript config, ESLint rules, and build process
+
 ## Features 🎉
 
-- 🐳 **Docker Ready**: MMB is ready to be built and run in a Docker container.
-- 🌐 **Real-time Attack Visualization**: View your attack’s progress and statistics in real-time as it runs. 🔥
-- 🎶 **Miku-themed UI**: A cute and vibrant design with Miku’s vibe to make the process more fun. Includes a banger song to keep you pumped! 🎧
+- 🐳 **Docker Ready**: MMB is ready to be built and run in a Docker container with production-grade setup.
+- 🌐 **Real-time Attack Visualization**: View your attack's progress and statistics in real-time as it runs. 🔥
+- 🎶 **Miku-themed UI**: A cute and vibrant design with Miku's vibe to make the process more fun. Includes a banger song to keep you pumped! 🎧
 - 🧑‍💻 **Configurable Attack Parameters**: Easily set the attack method, packet size, duration, and packet delay via the frontend interface.
 - 🛠️ **Worker-Based Attack Handling**: The server processes attacks in separate workers for optimal performance and scalability.
 - 📊 **Live Stats**: Track the success and failure of each attack in real-time. See how many packets are sent and whether they succeed or fail.
 - 🖼️ **Aesthetic Design**: A visually cute interface to make your experience enjoyable. 🌸
-- 📡 **Attack Methods:**:
+- 🔒 **Security Features**: Rate limiting, CORS protection, security headers, and input validation.
+- 📡 **Attack Methods**:
   - `HTTP Flood` - Send random HTTP requests
   - `HTTP Bypass` - Send HTTP requests that mimics real requests (Redirects, cookies, headers, resources...)
   - `HTTP Slowloris` - Send HTTP requests and keep the connection open
   - `Minecraft Ping` - Send Minecraft ping/motd requests
   - `TCP Flood` - Send random TCP packets
 
-## Setup 🛠️
+## 🚀 Quick Start
 
-### Prerequisites 📦
+### Using Docker (Recommended)
 
-Make sure you have the following installed:
+```bash
+# Clone the repository
+git clone https://github.com/sammwyy/mikumikubeam.git
+cd mikumikubeam
 
-- Node.js (v14 or above) 🌱
+# Start with Docker Compose
+docker-compose up -d
+
+# Access the application
+# Frontend: http://localhost
+# API: http://localhost/api
+```
+
+### Manual Setup
+
+#### Prerequisites 📦
+
+- Node.js (v18 or above) 🌱
 - npm (Node Package Manager) 📦
+- Redis (for production)
 
-### Development Mode 🔧
+#### Development Mode 🔧
 
 1. Clone this repository:
 
@@ -57,9 +83,16 @@ Make sure you have the following installed:
    - The **frontend** runs on `http://localhost:5173`.
    - The **backend** runs on `http://localhost:3000`.
 
+5. Run tests:
+
+   ```bash
+   npm run test
+   npm run test:ui
+   ```
+
 ---
 
-### Production Mode 💥
+#### Production Mode 💥
 
 1. Clone the repository and navigate to the project directory:
 
@@ -90,6 +123,76 @@ Make sure you have the following installed:
 
 > Don't forget to add the necessary files `data/proxies.txt` and `data/uas.txt`.
 
+## 🧪 Testing
+
+The project includes a comprehensive testing setup with Vitest:
+
+```bash
+# Run tests
+npm run test
+
+# Run tests with UI
+npm run test:ui
+
+# Type checking
+npm run type-check
+
+# Linting
+npm run lint
+npm run lint:fix
+```
+
+## 🔧 Development Scripts
+
+```bash
+npm run dev          # Start development server (client + server)
+npm run dev:client   # Start only client development server
+npm run dev:server   # Start only server development server
+npm run build        # Build for production
+npm run preview      # Preview production build
+npm run clean        # Clean build artifacts
+npm run start        # Start production server
+```
+
+## 🐳 Docker Deployment
+
+### Production Deployment
+
+```bash
+# Build and start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
+
+### Custom Configuration
+
+The Docker setup includes:
+- **Multi-stage builds** for optimized image size
+- **Nginx reverse proxy** with SSL support
+- **Redis** for caching and session storage
+- **Health checks** and automatic restarts
+- **Volume persistence** for data and logs
+
+## 📊 Monitoring & Health
+
+- **Health Check**: `GET /health`
+- **Real-time Logs**: Structured logging with timestamps
+- **Performance Metrics**: Built-in monitoring endpoints
+- **Error Tracking**: Comprehensive error handling and reporting
+
+## 🔒 Security Features
+
+- **Rate Limiting**: Configurable request limits per IP
+- **CORS Protection**: Cross-origin request validation
+- **Security Headers**: Helmet.js integration
+- **Input Validation**: Request parameter sanitization
+- **Worker Isolation**: Attack processes run in isolated threads
+
 ## Usage ⚙️
 
 Once the server is up and running, you can interact with it via the frontend:
@@ -115,13 +218,21 @@ Once the server is up and running, you can interact with it via the frontend:
 
 ## Adding Proxies and User-Agents
 
-Access to the ``data/proxies.txt`` and ``data/uas.txt`` can now be done fully in the frontend. Click the text button to the right of the beam button to open up the editor.
+Access to the `data/proxies.txt` and `data/uas.txt` can now be done fully in the frontend. Click the text button to the right of the beam button to open up the editor.
 
 ![AnnotatedImage](docs/annotated-button.png)
 
 ## Worker-Based Attack Handling 🔧💡
 
 Each attack type is handled in a separate worker thread, ensuring that the main server remains responsive. The attack workers are dynamically loaded based on the selected attack method (HTTP, etc...).
+
+## 🚀 Performance Optimizations
+
+- **Multi-stage Docker builds** for smaller production images
+- **Gzip compression** for static assets
+- **Browser caching** with appropriate cache headers
+- **Worker thread isolation** for attack processing
+- **Connection pooling** and keep-alive optimization
 
 ## To-Do 📝
 
@@ -131,6 +242,10 @@ Each attack type is handled in a separate worker thread, ensuring that the main 
   - And more! 🔥
 
 - Enhance attack statistics and reporting for better real-time monitoring. 📊
+
+- Add authentication and user management system
+- Implement attack scheduling and automation
+- Add more visualization options and charts
 
 ## Contributing 💖
 
@@ -170,9 +285,9 @@ const attackHandlers = {
 
 > Try running two terminals instead of one, in the first one use "npm run dev:client", and in the other one "npm run dev:server". (This happened to several people with Windows 11)
 
-**3. I go to "<http://localhost:3000>" and nothing appears.**
+**3. I go to "http://localhost:3000" and nothing appears.**
 
-> Port `3000` is the server port, to see the UI you must use port `5173` (<http://localhost:5173>)
+> Port `3000` is the server port, to see the UI you must use port `5173` (http://localhost:5173)
 
 **4. Requests fail to be sent to the target server (Read timeout and variations)**
 
@@ -182,6 +297,10 @@ const attackHandlers = {
 > - `protocol://host:port`
 > - `host:port` (Uses http as default protocol)
 > - `host` (Uses 8080 as default port)
+
+**5. How do I enable HTTPS in production?**
+
+> The Docker setup includes Nginx with SSL support. Place your SSL certificates in the `ssl/` directory and update the `nginx.conf` file with your domain.
 
 ---
 
