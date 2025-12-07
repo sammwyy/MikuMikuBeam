@@ -36,8 +36,7 @@ export function MikuToast({ message, isVisible, onClose, duration = 3000 }: Miku
                 }`}>
             <div className="relative shrink-0">
                 <img
-                    src="https://media.tenor.com/YW_zz6LXY7oAAAAM/miku.gif"
-                    alt="Miku Alert"
+                    src="https://media0.giphy.com/media/v1.Y2lkPTZjMDliOTUyM2p2bXMxbDVwcmdzd3R1NXR1ZTJnaG80d2FjdmRsbGp4eTVud3M4diZlcD12MV9zdGlja2Vyc19zZWFyY2gmY3Q9cw/rpkvgo4UnIrlhMEikq/200w.gif"
                     className="w-12 h-12 rounded-full object-cover border-2 border-pink-300 shadow-sm"
                 />
                 <div className="absolute -bottom-1 -right-1 bg-pink-500 rounded-full p-1 text-white animate-bounce">

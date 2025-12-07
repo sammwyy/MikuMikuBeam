@@ -140,6 +140,7 @@ function App() {
   const [toast, setToast] = useState({
     isVisible: false,
     message: "",
+    key: 0
   });
 
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -232,7 +233,11 @@ function App() {
 
   const startAttack = (isQuick?: boolean) => {
     if (!target.trim()) {
-      alert("Please enter a target!");
+      setToast({
+          isVisible: true,
+          message: "Please enter target!",
+          key: Date.now()
+      })
       return;
     }
 
@@ -289,6 +294,7 @@ function App() {
       <audio ref={audioRef} src="/audio.mp3" />
 
       <MikuToast
+        key={toast.key} 
         message={toast.message}
         isVisible={toast.isVisible}
         onClose={() => setToast((t) => ({ ...t, isVisible: false }))}
@@ -568,7 +574,8 @@ function App() {
             onSaved={() =>
               setToast({
                 isVisible: true,
-                message: "Configuration saved successfully! 🎵",
+                message: "Configuration saved successfully!",
+                key: Date.now()
               })
             }
             onClose={() => setOpenedConfig(false)}
