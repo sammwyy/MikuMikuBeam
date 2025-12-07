@@ -1,6 +1,7 @@
 import { Bot, ScrollText, Wand2, Wifi, Zap } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
+import { MikuToast } from "./components/toast";
 
 function isHostLocal(host: string) {
   return (
@@ -22,7 +23,12 @@ function getSocketURL() {
 
 const socket = io(getSocketURL());
 
-function ConfigureProxiesAndAgentsView() {
+type ToastCallback = {
+  onSaved?: () => void;
+  onClose?: () => void;
+};
+
+function ConfigureProxiesAndAgentsView({onSaved, onClose}: ToastCallback) {
   const [loadingConfiguration, setLoadingConfiguration] = useState(false);
   const [configuration, setConfiguration] = useState<string[]>([]);
 
@@ -66,8 +72,8 @@ function ConfigureProxiesAndAgentsView() {
     });
 
     response.then(() => {
-      alert("Saved");
-      window.location.reload();
+      onSaved?.();
+      onClose?.();
     });
   }
 
@@ -131,6 +137,10 @@ function App() {
   const [currentTask, setCurrentTask] = useState<NodeJS.Timeout | null>(null);
   const [audioVol, setAudioVol] = useState(100);
   const [openedConfig, setOpenedConfig] = useState(false);
+  const [toast, setToast] = useState({
+    isVisible: false,
+    message: "",
+  });
 
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -277,6 +287,13 @@ function App() {
       } p-8 overflow-y-auto ${actuallyAttacking ? "shake" : ""}`}
     >
       <audio ref={audioRef} src="/audio.mp3" />
+
+      <MikuToast
+        message={toast.message}
+        isVisible={toast.isVisible}
+        onClose={() => setToast((t) => ({ ...t, isVisible: false }))}
+        duration={3000} 
+      />
 
       <div className="max-w-2xl mx-auto space-y-8">
         <div className="text-center">
@@ -546,7 +563,17 @@ function App() {
           )}
         </div>
 
-        {openedConfig ? <ConfigureProxiesAndAgentsView /> : undefined}
+        {openedConfig ? (
+          <ConfigureProxiesAndAgentsView
+            onSaved={() =>
+              setToast({
+                isVisible: true,
+                message: "Configuration saved successfully! 🎵",
+              })
+            }
+            onClose={() => setOpenedConfig(false)}
+          />
+        ) : null}
 
         <div className="flex flex-col items-center">
           <span className="text-sm text-center text-gray-500">

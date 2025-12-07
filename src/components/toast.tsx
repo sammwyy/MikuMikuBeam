@@ -57,7 +57,6 @@ export function MikuToast({ message, isVisible, onClose, duration = 3000 }: Miku
             >
                 <X className="w-4 h-4" />
             </button>
-            {/* Progress Bar (Purely visual/cute touch) */}
             <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-gray-100 rounded-full overflow-hidden">
                 <div
                     className="h-full bg-gradient-to-r from-pink-400 to-blue-400 animate-[progress_3s_linear_forwards]"
