@@ -4,6 +4,12 @@ import { parentPort, workerData } from "worker_threads";
 
 import { randomString } from "../utils/randomUtils.js";
 
+export const info = {
+  id: "http_slowloris",
+  name: "HTTP/Slowloris",
+  description: "Slowloris attack",
+};
+
 const startAttack = () => {
   const { target, proxies, userAgents, duration, packetDelay, packetSize } =
     workerData;

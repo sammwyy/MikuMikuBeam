@@ -48,7 +48,17 @@ function normalizeProxy(proxy: Proxy): Proxy {
  * Filters proxies based on the attack method and ensures safe parsing of proxies.
  */
 export function filterProxies(proxies: Proxy[], method: AttackMethod): Proxy[] {
+  let allowedProtocols = METHODS[method];
+
+  if (!allowedProtocols) {
+    if (method.startsWith("http")) {
+      allowedProtocols = ["http", "https", "socks4", "socks5"];
+    } else {
+      allowedProtocols = ["socks4", "socks5"];
+    }
+  }
+
   return proxies
     .map(normalizeProxy)
-    .filter((proxy) => METHODS[method].includes(proxy.protocol));
+    .filter((proxy) => allowedProtocols.includes(proxy.protocol));
 }

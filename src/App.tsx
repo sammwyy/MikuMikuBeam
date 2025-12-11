@@ -1,7 +1,6 @@
 import { Bot, ScrollText, Wand2, Wifi, Zap } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
-import { useTranslation } from "react-i18next";
 
 function isHostLocal(host: string) {
   return (
@@ -24,7 +23,6 @@ function getSocketURL() {
 const socket = io(getSocketURL());
 
 function ConfigureProxiesAndAgentsView() {
-  const { t } = useTranslation();
   const [loadingConfiguration, setLoadingConfiguration] = useState(false);
   const [configuration, setConfiguration] = useState<string[]>([]);
 
@@ -68,7 +66,7 @@ function ConfigureProxiesAndAgentsView() {
     });
 
     response.then(() => {
-      alert(t("saved"));
+      alert("Saved");
       window.location.reload();
     });
   }
@@ -78,11 +76,11 @@ function ConfigureProxiesAndAgentsView() {
       {loadingConfiguration ? (
         <div className="flex flex-col items-center justify-center space-y-2">
           <img src="/loading.gif" className="rounded-sm shadow-sm" />
-          <p>{t("loading_config")}</p>
+          <p>Loading proxies.txt and uas.txt...</p>
         </div>
       ) : (
         <div className="w-[56rem] flex flex-col">
-          <p className="pl-1 mb-1 italic">{t("proxies_txt")}</p>
+          <p className="pl-1 mb-1 italic">proxies.txt</p>
           <textarea
             value={configuration[0]}
             className="w-full h-40 p-2 border-black/10 border-[1px] rounded-sm resize-none"
@@ -91,7 +89,7 @@ function ConfigureProxiesAndAgentsView() {
             }
             placeholder="socks5://0.0.0.0&#10;socks4://user:pass@0.0.0.0:12345"
           ></textarea>
-          <p className="pl-1 mt-2 mb-1 italic">{t("uas_txt")}</p>
+          <p className="pl-1 mt-2 mb-1 italic">uas.txt</p>
           <textarea
             value={configuration[1]}
             className="w-full h-40 p-2 border-black/10 border-[1px] rounded-sm resize-none"
@@ -104,16 +102,14 @@ function ConfigureProxiesAndAgentsView() {
             onClick={saveConfiguration}
             className="p-4 mt-4 text-white bg-gray-800 rounded-md hover:bg-gray-900"
           >
-            {t("write_changes")}
+            Write Changes
           </button>
         </div>
       )}
     </div>
   );
 }
-
 function App() {
-  const { t } = useTranslation();
   const [isAttacking, setIsAttacking] = useState(false);
   const [actuallyAttacking, setActuallyAttacking] = useState(false);
   const [animState, setAnimState] = useState(0);
@@ -134,8 +130,20 @@ function App() {
   const [currentTask, setCurrentTask] = useState<NodeJS.Timeout | null>(null);
   const [audioVol, setAudioVol] = useState(100);
   const [openedConfig, setOpenedConfig] = useState(false);
+  const [methods, setMethods] = useState<any[]>([]);
 
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  useEffect(() => {
+    const baseUrl = getSocketURL();
+    const url = baseUrl === "/" ? "/methods" : `${baseUrl}/methods`;
+    fetch(url)
+      .then((res) => res.json())
+      .then((data) => {
+        setMethods(data);
+      })
+      .catch((err) => console.error("Failed to fetch methods:", err));
+  }, []);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -224,8 +232,9 @@ function App() {
   };
 
   const startAttack = (isQuick?: boolean) => {
+  const startAttack = (isQuick?: boolean) => {
     if (!target.trim()) {
-      alert(t("enter_target_alert"));
+      alert("Please enter a target!");
       return;
     }
 
@@ -235,10 +244,9 @@ function App() {
       bots: old.bots,
       totalPackets: 0,
     }));
-    addLog(t("preparing_attack"));
+    addLog("🍮 Preparing attack...");
 
-    // Play audio
-    if (audioRef.current) {
+    // Play audiocurrent) {
       audioRef.current.currentTime = isQuick ? 9.5 : 0;
       audioRef.current.volume = audioVol / 100;
       audioRef.current.play();
@@ -284,7 +292,7 @@ function App() {
       <div className="max-w-2xl mx-auto space-y-8">
         <div className="text-center">
           <h1 className="mb-2 text-4xl font-bold text-pink-500">
-            {t("title")}
+            Miku Miku Beam
           </h1>
           <p
             className={`${
@@ -293,7 +301,7 @@ function App() {
                 : "text-white"
             }`}
           >
-            {t("subtitle")}
+            Because DDoS attacks are also cute and even more so when Miku does them.
           </p>
         </div>
 
@@ -322,7 +330,7 @@ function App() {
                 type="text"
                 value={target}
                 onChange={(e) => setTarget(e.target.value)}
-                placeholder={t("enter_target_placeholder")}
+                placeholder="Enter target URL or IP"
                 className={`${
                   animState === 0 || animState === 3 ? "" : "text-white"
                 } px-4 py-2 border border-pink-200 rounded-lg outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200`}
@@ -342,7 +350,7 @@ function App() {
                 `}
                 >
                   <Wand2 className="w-5 h-5" />
-                  {isAttacking ? t("stop_beam") : t("start_beam")}
+                  {isAttacking ? "Stop Beam" : "Start Miku Beam"}
                 </button>
                 <button
                   onClick={() =>
@@ -378,7 +386,7 @@ function App() {
                       : "text-white"
                   }`}
                 >
-                  {t("attack_method")}
+                  Attack Method
                 </label>
                 <select
                   value={attackMethod}
@@ -388,11 +396,11 @@ function App() {
                   } w-full px-4 py-2 border border-pink-200 rounded-lg outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200`}
                   disabled={isAttacking}
                 >
-                  <option value="http_flood">HTTP/Flood</option>
-                  <option value="http_bypass">HTTP/Bypass</option>
-                  <option value="http_slowloris">HTTP/Slowloris</option>
-                  <option value="tcp_flood">TCP/Flood</option>
-                  <option value="minecraft_ping">Minecraft/Ping</option>
+                  {methods.map((method) => (
+                    <option key={method.id} value={method.id}>
+                      {method.name}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div>
@@ -403,7 +411,7 @@ function App() {
                       : "text-white"
                   }`}
                 >
-                  {t("packet_size")}
+                  Packet Size (kb)
                 </label>
                 <input
                   type="number"
@@ -425,7 +433,7 @@ function App() {
                       : "text-white"
                   }`}
                 >
-                  {t("duration")}
+                  Duration (seconds)
                 </label>
                 <input
                   type="number"
@@ -447,7 +455,7 @@ function App() {
                       : "text-white"
                   }`}
                 >
-                  {t("packet_delay")}
+                  Packet Delay (ms)
                 </label>
                 <input
                   type="number"
@@ -469,7 +477,7 @@ function App() {
             <div className="p-4 rounded-lg bg-gradient-to-br from-pink-500/10 to-blue-500/10">
               <div className="flex items-center gap-2 mb-2 text-pink-600">
                 <Zap className="w-4 h-4" />
-                <span className="font-semibold">{t("packets_sec")}</span>
+                <span className="font-semibold">Packets/sec</span>
               </div>
               <div
                 className={`text-2xl font-bold ${
@@ -484,7 +492,7 @@ function App() {
             <div className="p-4 rounded-lg bg-gradient-to-br from-pink-500/10 to-blue-500/10">
               <div className="flex items-center gap-2 mb-2 text-pink-600">
                 <Bot className="w-4 h-4" />
-                <span className="font-semibold">{t("active_bots")}</span>
+                <span className="font-semibold">Active Bots</span>
               </div>
               <div
                 className={`text-2xl font-bold ${
@@ -499,7 +507,7 @@ function App() {
             <div className="p-4 rounded-lg bg-gradient-to-br from-pink-500/10 to-blue-500/10">
               <div className="flex items-center gap-2 mb-2 text-pink-600">
                 <Wifi className="w-4 h-4" />
-                <span className="font-semibold">{t("total_packets")}</span>
+                <span className="font-semibold">Total Packets</span>
               </div>
               <div
                 className={`text-2xl font-bold ${
@@ -531,7 +539,7 @@ function App() {
               ))}
               {logs.length === 0 && (
                 <div className="italic text-gray-500">
-                  {">"} {t("waiting_power")}
+                  {">"} Waiting for Miku's power...
                 </div>
               )}
             </div>
@@ -552,17 +560,13 @@ function App() {
 
         <div className="flex flex-col items-center">
           <span className="text-sm text-center text-gray-500">
-            🎵 {t("made_by")}{" "}
+            🎵 v1.0 made by{" "}
             <a
               href="https://github.com/sammwyy/mikumikubeam"
               target="_blank"
               rel="noreferrer"
             >
               @Sammwy
-            </a>{" "}
-            &bull; {t("translated_by")}{" "}
-            <a href={t("translator_url")} target="_blank" rel="noreferrer">
-              @{t("translator_name")}
             </a>{" "}
             🎵
           </span>

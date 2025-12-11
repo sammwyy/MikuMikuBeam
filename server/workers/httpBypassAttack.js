@@ -3,6 +3,12 @@ import { parentPort, workerData } from "worker_threads";
 import HTTPBot from "../utils/httpBot.js";
 import { randomItem } from "../utils/randomUtils.js";
 
+export const info = {
+  id: "http_bypass",
+  name: "HTTP/Bypass",
+  description: "Bypass attack",
+};
+
 const HTTP_ACCEPT_HEADERS = [
   "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
   "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
