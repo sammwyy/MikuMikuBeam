@@ -1,6 +1,7 @@
 import { Bot, ScrollText, Wand2, Wifi, Zap } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
+import { useTranslation } from "react-i18next";
 
 function isHostLocal(host: string) {
   return (
@@ -23,6 +24,7 @@ function getSocketURL() {
 const socket = io(getSocketURL());
 
 function ConfigureProxiesAndAgentsView() {
+  const { t } = useTranslation();
   const [loadingConfiguration, setLoadingConfiguration] = useState(false);
   const [configuration, setConfiguration] = useState<string[]>([]);
 
@@ -66,7 +68,7 @@ function ConfigureProxiesAndAgentsView() {
     });
 
     response.then(() => {
-      alert("Saved");
+      alert(t("saved"));
       window.location.reload();
     });
   }
@@ -76,11 +78,11 @@ function ConfigureProxiesAndAgentsView() {
       {loadingConfiguration ? (
         <div className="flex flex-col items-center justify-center space-y-2">
           <img src="/loading.gif" className="rounded-sm shadow-sm" />
-          <p>Cargando proxies.txt y uas.txt...</p>
+          <p>{t("loading_config")}</p>
         </div>
       ) : (
         <div className="w-[56rem] flex flex-col">
-          <p className="pl-1 mb-1 italic">proxies.txt</p>
+          <p className="pl-1 mb-1 italic">{t("proxies_txt")}</p>
           <textarea
             value={configuration[0]}
             className="w-full h-40 p-2 border-black/10 border-[1px] rounded-sm resize-none"
@@ -89,7 +91,7 @@ function ConfigureProxiesAndAgentsView() {
             }
             placeholder="socks5://0.0.0.0&#10;socks4://user:pass@0.0.0.0:12345"
           ></textarea>
-          <p className="pl-1 mt-2 mb-1 italic">uas.txt</p>
+          <p className="pl-1 mt-2 mb-1 italic">{t("uas_txt")}</p>
           <textarea
             value={configuration[1]}
             className="w-full h-40 p-2 border-black/10 border-[1px] rounded-sm resize-none"
@@ -102,7 +104,7 @@ function ConfigureProxiesAndAgentsView() {
             onClick={saveConfiguration}
             className="p-4 mt-4 text-white bg-gray-800 rounded-md hover:bg-gray-900"
           >
-            Guardar Cambios
+            {t("write_changes")}
           </button>
         </div>
       )}
@@ -111,6 +113,7 @@ function ConfigureProxiesAndAgentsView() {
 }
 
 function App() {
+  const { t } = useTranslation();
   const [isAttacking, setIsAttacking] = useState(false);
   const [actuallyAttacking, setActuallyAttacking] = useState(false);
   const [animState, setAnimState] = useState(0);
@@ -222,7 +225,7 @@ function App() {
 
   const startAttack = (isQuick?: boolean) => {
     if (!target.trim()) {
-      alert("¡Por favor introduce un objetivo!");
+      alert(t("enter_target_alert"));
       return;
     }
 
@@ -232,7 +235,7 @@ function App() {
       bots: old.bots,
       totalPackets: 0,
     }));
-    addLog("🍮 Preparando ataque...");
+    addLog(t("preparing_attack"));
 
     // Play audio
     if (audioRef.current) {
@@ -281,7 +284,7 @@ function App() {
       <div className="max-w-2xl mx-auto space-y-8">
         <div className="text-center">
           <h1 className="mb-2 text-4xl font-bold text-pink-500">
-            Miku Miku Beam
+            {t("title")}
           </h1>
           <p
             className={`${
@@ -290,7 +293,7 @@ function App() {
                 : "text-white"
             }`}
           >
-            Porque los ataques DDoS también son tiernos y más aún cuando los hace Miku.
+            {t("subtitle")}
           </p>
         </div>
 
@@ -319,7 +322,7 @@ function App() {
                 type="text"
                 value={target}
                 onChange={(e) => setTarget(e.target.value)}
-                placeholder="Introduzca la URL o IP objetivo"
+                placeholder={t("enter_target_placeholder")}
                 className={`${
                   animState === 0 || animState === 3 ? "" : "text-white"
                 } px-4 py-2 border border-pink-200 rounded-lg outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200`}
@@ -339,7 +342,7 @@ function App() {
                 `}
                 >
                   <Wand2 className="w-5 h-5" />
-                  {isAttacking ? "Stop Beam" : "Start Miku Beam"}
+                  {isAttacking ? t("stop_beam") : t("start_beam")}
                 </button>
                 <button
                   onClick={() =>
@@ -375,7 +378,7 @@ function App() {
                       : "text-white"
                   }`}
                 >
-                  Método de ataque
+                  {t("attack_method")}
                 </label>
                 <select
                   value={attackMethod}
@@ -400,7 +403,7 @@ function App() {
                       : "text-white"
                   }`}
                 >
-                  Tamaño paquete (kb)
+                  {t("packet_size")}
                 </label>
                 <input
                   type="number"
@@ -422,7 +425,7 @@ function App() {
                       : "text-white"
                   }`}
                 >
-                  Duración (segundos)
+                  {t("duration")}
                 </label>
                 <input
                   type="number"
@@ -444,7 +447,7 @@ function App() {
                       : "text-white"
                   }`}
                 >
-                  Tiempo paquete (ms)
+                  {t("packet_delay")}
                 </label>
                 <input
                   type="number"
@@ -466,7 +469,7 @@ function App() {
             <div className="p-4 rounded-lg bg-gradient-to-br from-pink-500/10 to-blue-500/10">
               <div className="flex items-center gap-2 mb-2 text-pink-600">
                 <Zap className="w-4 h-4" />
-                <span className="font-semibold">Paquetes/sec</span>
+                <span className="font-semibold">{t("packets_sec")}</span>
               </div>
               <div
                 className={`text-2xl font-bold ${
@@ -481,7 +484,7 @@ function App() {
             <div className="p-4 rounded-lg bg-gradient-to-br from-pink-500/10 to-blue-500/10">
               <div className="flex items-center gap-2 mb-2 text-pink-600">
                 <Bot className="w-4 h-4" />
-                <span className="font-semibold">Bots Activos</span>
+                <span className="font-semibold">{t("active_bots")}</span>
               </div>
               <div
                 className={`text-2xl font-bold ${
@@ -496,7 +499,7 @@ function App() {
             <div className="p-4 rounded-lg bg-gradient-to-br from-pink-500/10 to-blue-500/10">
               <div className="flex items-center gap-2 mb-2 text-pink-600">
                 <Wifi className="w-4 h-4" />
-                <span className="font-semibold">Paquetes Totales</span>
+                <span className="font-semibold">{t("total_packets")}</span>
               </div>
               <div
                 className={`text-2xl font-bold ${
@@ -528,7 +531,7 @@ function App() {
               ))}
               {logs.length === 0 && (
                 <div className="italic text-gray-500">
-                  {">"} Waiting for Miku's power...
+                  {">"} {t("waiting_power")}
                 </div>
               )}
             </div>
@@ -549,13 +552,17 @@ function App() {
 
         <div className="flex flex-col items-center">
           <span className="text-sm text-center text-gray-500">
-            🎵 v1.0 made by{" "}
+            🎵 {t("made_by")}{" "}
             <a
-              href="https://upkuma.miguerubsk.ddns.net/status/general"
+              href="https://github.com/sammwyy/mikumikubeam"
               target="_blank"
               rel="noreferrer"
             >
-              @miguerubsk
+              @Sammwy
+            </a>{" "}
+            &bull; {t("translated_by")}{" "}
+            <a href={t("translator_url")} target="_blank" rel="noreferrer">
+              @{t("translator_name")}
             </a>{" "}
             🎵
           </span>
@@ -568,7 +575,7 @@ function App() {
               step="5"
               draggable="false"
               value={audioVol}
-              onChange={(e) => setAudioVol(parseInt(e.target?.value))}
+              onChange={(e) => setAudioVol(Number.parseInt(e.target?.value))}
             />
           </span>
         </div>
