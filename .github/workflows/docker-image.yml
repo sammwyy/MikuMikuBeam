@@ -1,0 +1,86 @@
+name: Docker Image CI/CD (Docker Hub & GitHub Release)
+
+on:
+  push:
+    branches: 
+      - "master"
+      - "dev"
+    tags:
+      - 'v*' # Se activa cuando haces 'git push --tags' con una etiqueta vX.Y.Z
+
+jobs:
+  # Definición global del repositorio de Docker Hub
+  env:
+    DOCKER_REPO: miguerubsk/miku-miku-beam
+
+  build-and-push:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # --- 1. LOGIN SEGURO EN DOCKER HUB ---
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+        
+    # --- 2. CONFIGURACIÓN DE METADATOS Y ETIQUETAS ---
+    - name: Extract metadata (tags, labels) for Docker
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.DOCKER_REPO }}
+        tags: |
+          # Etiqueta 'latest' para la rama master
+          type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
+          # Etiqueta 'beta' para la rama dev
+          type=raw,value=beta,enable=${{ github.ref == 'refs/heads/dev' }}
+          # Etiqueta con el nombre de la etiqueta Git (ej: v1.0.0)
+          type=ref,event=tag
+          # Etiqueta por SHA corto
+          type=sha,format=short
+
+    # --- 3. CONSTRUCCIÓN Y SUBIDA (PUSH) DE LA IMAGEN ---
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile
+        push: true 
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  # --- TRABAJO CONDICIONAL PARA CREAR RELEASE ---
+  create-github-release:
+    # Este trabajo SÓLO se ejecutará si el evento fue un push de una etiqueta 'v*'
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    # Se asegura de que la imagen se haya construido y subido antes de crear el release
+    needs: build-and-push 
+    
+    # Redefine el env para que la referencia sea clara
+    env:
+      DOCKER_REPO: ${{ env.DOCKER_REPO }}
+
+    steps:
+    - name: Create GitHub Release
+      # Usamos una acción de terceros para crear el release de forma sencilla
+      uses: softprops/action-gh-release@v2 
+      with:
+        # Usa el nombre de la etiqueta Git que disparó el workflow (ej. v1.0.0)
+        tag_name: ${{ github.ref_name }} 
+        name: Release ${{ github.ref_name }}
+        body: |
+          ### 🚀 Nuevo Release
+          
+          Esta versión ha sido publicada en Docker Hub.
+          
+          - **Etiqueta Docker:** `${{ env.DOCKER_REPO }}:${{ github.ref_name }}`
+          - [Ver en Docker Hub](https://hub.docker.com/r/${{ env.DOCKER_REPO }}/tags) 
+        
+        # El token GITHUB_TOKEN ya tiene los permisos necesarios para crear releases
