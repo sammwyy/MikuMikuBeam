@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     
     env:
-      DOCKER_REPO: miguerubsk/miku-miku-beam
+      DOCKER_REPO: ${{ vars.DOCKER_REPOSITORY }}
 
     outputs:
       docker_repository: ${{ env.DOCKER_REPO }}
