@@ -12,18 +12,24 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     
-    # 🌟 CORRECTION 1: Define DOCKER_REPO inside the 'env' block of the job.
-    # This variable is scoped to this job only.
     env:
       DOCKER_REPO: tu-usuario/mi-app-nombre # <-- IMPORTANT: CHANGE THIS TO YOUR REPO NAME!
 
-    # 🌟 CORRECTION 2: Define the job output to pass the DOCKER_REPO value to the next job.
     outputs:
       docker_repository: ${{ env.DOCKER_REPO }}
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+
+    # -----------------------------------------------------
+    # 🌟 NEW STEP: Configure Buildx driver for Cache Support
+    # -----------------------------------------------------
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      # The 'docker-container' driver supports advanced cache backends like GHA.
+      with:
+        driver: docker-container 
 
     # --- 1. SECURE LOGIN TO DOCKER HUB ---
     - name: Log in to Docker Hub
@@ -55,20 +61,16 @@ jobs:
         push: true 
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
-        # Enable GitHub Actions cache for faster subsequent builds
+        # Cache is now correctly supported by the 'docker-container' driver setup above
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
   # --- CONDITIONAL JOB TO CREATE GITHUB RELEASE ---
   create-github-release:
-    # Only run this job if the workflow was triggered by a Git tag starting with 'v'
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
-    # Wait for the image to be built and pushed successfully
     needs: build-and-push 
     
-    # 🌟 CORRECTION 3: Access the exported variable from the previous job's outputs.
-    # This defines the DOCKER_REPO environment variable for this job's steps.
     env:
       DOCKER_REPO: ${{ needs.build-and-push.outputs.docker_repository }}
 
