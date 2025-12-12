@@ -39,12 +39,13 @@ WORKDIR /app
 # --- SECURITY IMPROVEMENT: Create a non-root user ---
 # Running as non-root user (UID 1001) limits potential damage if compromised
 RUN groupadd -r appuser && useradd -r -g appuser -u 1001 appuser
-USER appuser
 
 # Copy ONLY production dependencies from the builder stage
 # We install them here to ensure the final image only contains what is needed
 COPY --from=builder /app/package*.json ./
 RUN npm install --omit=dev
+
+USER appuser
 
 # Copy the compiled application files from the 'builder' stage
 # This directory contains the final, runnable code
