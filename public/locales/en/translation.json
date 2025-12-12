@@ -7,6 +7,7 @@
   "enter_target_alert": "Please enter a target!",
   "preparing_attack": "🍮 Preparing attack...",
   "title": "Miku Miku Beam",
+  "document_title": "Miku Beam - Network Stresser",
   "subtitle": "Because DDoS attacks are also cute and even more so when Miku does them.",
   "enter_target_placeholder": "Enter target URL or IP",
   "stop_beam": "Stop Beam",

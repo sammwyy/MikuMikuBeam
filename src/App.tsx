@@ -138,6 +138,10 @@ function App() {
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
+    document.title = t("document_title");
+  }, [t]);
+
+  useEffect(() => {
     if (audioRef.current) {
       const audio = audioRef.current;
       const handler = () => {
