@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     
     env:
-      DOCKER_REPO: tu-usuario/mi-app-nombre # <-- IMPORTANT: CHANGE THIS TO YOUR REPO NAME!
+      DOCKER_REPO: miguerubsk/miku-miku-beam
 
     outputs:
       docker_repository: ${{ env.DOCKER_REPO }}
