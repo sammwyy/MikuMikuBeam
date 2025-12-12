@@ -3,6 +3,12 @@ import { parentPort, workerData } from "worker_threads";
 import { createTcpClient } from "../utils/clientUtils.js";
 import { randomString } from "../utils/randomUtils.js";
 
+export const info = {
+  id: "tcp_flood",
+  name: "TCP/Flood",
+  description: "TCP flood attack",
+};
+
 const startAttack = () => {
   const { target, proxies, duration, packetDelay, packetSize } = workerData;
 

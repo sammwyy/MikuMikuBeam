@@ -1,9 +1,9 @@
 import express from "express";
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync, readdirSync } from "fs";
 import { createServer } from "http";
 import { dirname, join } from "path";
 import { Server } from "socket.io";
-import { fileURLToPath } from "url";
+import { fileURLToPath, pathToFileURL } from "url";
 import { Worker } from "worker_threads";
 
 import bodyParser from "body-parser";
@@ -11,18 +11,36 @@ import { currentPath, loadProxies, loadUserAgents } from "./fileLoader";
 import { AttackMethod } from "./lib";
 import { filterProxies } from "./proxyUtils";
 
-// Define the workers based on attack type
-const attackWorkers: { [key in AttackMethod]: string } = {
-  http_flood: "./workers/httpFloodAttack.js",
-  http_bypass: "./workers/httpBypassAttack.js",
-  http_slowloris: "./workers/httpSlowlorisAttack.js",
-  tcp_flood: "./workers/tcpFloodAttack.js",
-  minecraft_ping: "./workers/minecraftPingAttack.js",
-};
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const __prod = process.env.NODE_ENV === "production";
+
+// Define the workers based on attack type
+const attackWorkers: Record<string, string> = {};
+const attackMethods: any[] = [];
+const workersDir = join(__dirname, "workers");
+
+try {
+  const files = readdirSync(workersDir);
+  for (const file of files) {
+    if (file.endsWith("Attack.js")) {
+      const filePath = join(workersDir, file);
+      const fileUrl = pathToFileURL(filePath).href;
+      const module = await import(fileUrl);
+
+      if (module.info) {
+        attackWorkers[module.info.id] = `./workers/${file}`;
+        attackMethods.push(module.info);
+      }
+    }
+  }
+  console.log(
+    "Loaded workers:",
+    attackMethods.map((m) => m.name)
+  );
+} catch (error) {
+  console.error("Error loading workers:", error);
+}
 
 const app = express();
 const httpServer = createServer(app);
@@ -38,7 +56,7 @@ const proxies = loadProxies();
 const userAgents = loadUserAgents();
 
 console.log("Proxies loaded:", proxies.length);
-console.log("User agents loaded:", userAgents.length);
+console.log("User Agents loaded:", userAgents.length);
 
 app.use(express.static(join(__dirname, "public")));
 
@@ -59,13 +77,13 @@ io.on("connection", (socket) => {
 
     if (!attackWorkerFile) {
       socket.emit("stats", {
-        log: `❌ Unsupported attack type: ${attackMethod}`,
+        log: `❌ Attack Type Not Supported: ${attackMethod}`,
       });
       return;
     }
 
     socket.emit("stats", {
-      log: `🍒 Using ${filteredProxies.length} filtered proxies to perform attack.`,
+      log: `🍒 Using ${filteredProxies.length} filtered proxies to perform the attack.`,
       bots: filteredProxies.length,
     });
 
@@ -82,7 +100,7 @@ io.on("connection", (socket) => {
 
     worker.on("message", (message) => socket.emit("stats", message));
 
-    worker.on("error", (error) => {
+    worker.on("error", (error: any) => {
       console.error(`Worker error: ${error.message}`);
       socket.emit("stats", { log: `❌ Worker error: ${error.message}` });
     });
@@ -110,6 +128,12 @@ io.on("connection", (socket) => {
     }
     console.log("Client disconnected");
   });
+});
+
+app.get("/methods", (req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
+  res.setHeader("Content-Type", "application/json");
+  res.send(attackMethods);
 });
 
 app.get("/configuration", (req, res) => {
