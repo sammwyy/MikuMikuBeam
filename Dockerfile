@@ -4,7 +4,7 @@
 # STAGE 1: BUILDER - Used for installing dev dependencies and compiling/bundling
 ################################################################################
 # Use a full Node.js image for building (contains compilers and tools)
-FROM node:20 as builder
+FROM node:20-slim as builder
 
 # Set the working directory inside the container
 WORKDIR /app

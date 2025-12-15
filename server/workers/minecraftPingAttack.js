@@ -2,6 +2,12 @@ import { parentPort, workerData } from "worker_threads";
 
 import { pingMinecraftServer } from "../utils/mcUtils.js";
 
+export const info = {
+  id: "minecraft_ping",
+  name: "Minecraft/Ping",
+  description: "Minecraft ping attack",
+};
+
 const startAttack = () => {
   const { target, proxies, duration, packetDelay } = workerData;
 

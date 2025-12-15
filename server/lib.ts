@@ -8,9 +8,4 @@ export interface Proxy {
   port: number;
 }
 
-export type AttackMethod =
-  | "http_flood"
-  | "http_bypass"
-  | "http_slowloris"
-  | "tcp_flood"
-  | "minecraft_ping";
+export type AttackMethod = string;

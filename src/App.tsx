@@ -109,7 +109,6 @@ function ConfigureProxiesAndAgentsView() {
     </div>
   );
 }
-
 function App() {
   const [isAttacking, setIsAttacking] = useState(false);
   const [actuallyAttacking, setActuallyAttacking] = useState(false);
@@ -131,8 +130,20 @@ function App() {
   const [currentTask, setCurrentTask] = useState<NodeJS.Timeout | null>(null);
   const [audioVol, setAudioVol] = useState(100);
   const [openedConfig, setOpenedConfig] = useState(false);
+  const [methods, setMethods] = useState<any[]>([]);
 
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  useEffect(() => {
+    const baseUrl = getSocketURL();
+    const url = baseUrl === "/" ? "/methods" : `${baseUrl}/methods`;
+    fetch(url)
+      .then((res) => res.json())
+      .then((data) => {
+        setMethods(data);
+      })
+      .catch((err) => console.error("Failed to fetch methods:", err));
+  }, []);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -221,6 +232,7 @@ function App() {
   };
 
   const startAttack = (isQuick?: boolean) => {
+  const startAttack = (isQuick?: boolean) => {
     if (!target.trim()) {
       alert("Please enter a target!");
       return;
@@ -234,8 +246,7 @@ function App() {
     }));
     addLog("🍮 Preparing attack...");
 
-    // Play audio
-    if (audioRef.current) {
+    // Play audiocurrent) {
       audioRef.current.currentTime = isQuick ? 9.5 : 0;
       audioRef.current.volume = audioVol / 100;
       audioRef.current.play();
@@ -385,11 +396,11 @@ function App() {
                   } w-full px-4 py-2 border border-pink-200 rounded-lg outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200`}
                   disabled={isAttacking}
                 >
-                  <option value="http_flood">HTTP/Flood</option>
-                  <option value="http_bypass">HTTP/Bypass</option>
-                  <option value="http_slowloris">HTTP/Slowloris</option>
-                  <option value="tcp_flood">TCP/Flood</option>
-                  <option value="minecraft_ping">Minecraft/Ping</option>
+                  {methods.map((method) => (
+                    <option key={method.id} value={method.id}>
+                      {method.name}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div>
@@ -568,7 +579,7 @@ function App() {
               step="5"
               draggable="false"
               value={audioVol}
-              onChange={(e) => setAudioVol(parseInt(e.target?.value))}
+              onChange={(e) => setAudioVol(Number.parseInt(e.target?.value))}
             />
           </span>
         </div>
