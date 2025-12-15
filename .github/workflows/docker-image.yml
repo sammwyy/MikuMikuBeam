@@ -1,4 +1,4 @@
-name: Docker Image CI/CD (Docker Hub & GitHub Release)
+name: Docker Image CI/CD (Multi-Arch & GitHub Release)
 
 on:
   push:
@@ -13,21 +13,21 @@ jobs:
   # 1. LINUX BUILD JOB (Multi-Arch: AMD64, ARM64, ARMv7)
   # -----------------------------------------------------
   build-and-push-linux:
-    # 🌟 RENAMED JOB to clearly separate from Windows build
     runs-on: ubuntu-latest
 
+    # Access the DOCKER_REPOSITORY variable set in GitHub Settings > Variables
     env:
       DOCKER_REPO: ${{ vars.DOCKER_REPOSITORY }}
 
+    # Export the repository name to the subsequent release job
     outputs:
-      docker_repository: ${{ env.DOCKER_REPO }} # Export for the Release job
+      docker_repository: ${{ env.DOCKER_REPO }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # (Pasos 1-3: Setup Buildx, Docker Login, Metadata Extraction)
-      # ... (Mantenemos la misma configuración que tenías para Linux)
+      # 🌟 Mandatory for Multi-Arch build and GHA Cache on Linux runners
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
@@ -45,12 +45,13 @@ jobs:
         with:
           images: ${{ env.DOCKER_REPO }}
           tags: |
+            # Primary tags based on branch/tag context
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
             type=raw,value=beta,enable=${{ github.ref == 'refs/heads/dev' }}
             type=ref,event=tag
+            # Short SHA tag for unique traceability
             type=sha,format=short
 
-      # 4. BUILD AND PUSH THE LINUX IMAGES
       - name: Build and push Linux images
         uses: docker/build-push-action@v5
         with:
@@ -80,9 +81,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        # Driver 'docker' is typically sufficient on Windows runners.
+      # 🚨 FIX: We intentionally skip the setup-buildx-action driver configuration here
+      # to avoid the 'no matching manifest' error on the Windows runner.
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
@@ -101,7 +101,6 @@ jobs:
             type=ref,event=tag
             type=sha,format=short
 
-      # 4. BUILD AND PUSH THE WINDOWS IMAGE
       - name: Build and push Windows image
         uses: docker/build-push-action@v5
         with:
@@ -121,6 +120,7 @@ jobs:
   # 3. CONDITIONAL JOB TO CREATE GITHUB RELEASE
   # -----------------------------------------------------
   create-github-release:
+    # Only runs when a Git tag is pushed (e.g., v1.0.0)
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     # Wait for the Linux build to complete (which exports the DOCKER_REPO output)
