@@ -56,7 +56,7 @@ const proxies = loadProxies();
 const userAgents = loadUserAgents();
 
 console.log("Proxies loaded:", proxies.length);
-console.log("User Agents loaded:", userAgents.length);
+console.log("User agents loaded:", userAgents.length);
 
 app.use(express.static(join(__dirname, "public")));
 
@@ -77,13 +77,13 @@ io.on("connection", (socket) => {
 
     if (!attackWorkerFile) {
       socket.emit("stats", {
-        log: `❌ Attack Type Not Supported: ${attackMethod}`,
+        log: `❌ Unsupported attack type: ${attackMethod}`,
       });
       return;
     }
 
     socket.emit("stats", {
-      log: `🍒 Using ${filteredProxies.length} filtered proxies to perform the attack.`,
+      log: `🍒 Using ${filteredProxies.length} filtered proxies to perform attack.`,
       bots: filteredProxies.length,
     });
 
