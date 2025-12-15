@@ -1,0 +1,89 @@
+name: Docker Image CI/CD (Docker Hub & GitHub Release)
+
+on:
+  push:
+    branches: 
+      - "master" # Production branch (gets 'latest' tag)
+      - "dev"    # Development branch (gets 'beta' tag)
+    tags:
+      - 'v*'   # Trigger on Git tags (e.g., v1.0.0) for releases
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    
+    env:
+      DOCKER_REPO: miguerubsk/miku-miku-beam
+
+    outputs:
+      docker_repository: ${{ env.DOCKER_REPO }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # -----------------------------------------------------
+    # 🌟 NEW STEP: Configure Buildx driver for Cache Support
+    # -----------------------------------------------------
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      # The 'docker-container' driver supports advanced cache backends like GHA.
+      with:
+        driver: docker-container 
+
+    # --- 1. SECURE LOGIN TO DOCKER HUB ---
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+        
+    # --- 2. EXTRACT METADATA AND TAGS ---
+    - name: Extract metadata (tags, labels) for Docker
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.DOCKER_REPO }}
+        tags: |
+          # Primary tags based on branch/tag context
+          type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
+          type=raw,value=beta,enable=${{ github.ref == 'refs/heads/dev' }}
+          type=ref,event=tag # e.g., v1.0.0
+          # Short SHA tag for unique traceability
+          type=sha,format=short
+
+    # --- 3. BUILD AND PUSH THE IMAGE ---
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile
+        push: true 
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        # Cache is now correctly supported by the 'docker-container' driver setup above
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  # --- CONDITIONAL JOB TO CREATE GITHUB RELEASE ---
+  create-github-release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    needs: build-and-push 
+    
+    env:
+      DOCKER_REPO: ${{ needs.build-and-push.outputs.docker_repository }}
+
+    steps:
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2 
+      with:
+        tag_name: ${{ github.ref_name }} # e.g., v1.0.0
+        name: Release ${{ github.ref_name }}
+        body: |
+          ### 🚀 New Release
+          
+          This version has been published to Docker Hub.
+          
+          - **Docker Tag:** `${{ env.DOCKER_REPO }}:${{ github.ref_name }}`
+          - [View on Docker Hub](https://hub.docker.com/r/${{ env.DOCKER_REPO }}/tags)
