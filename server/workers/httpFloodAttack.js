@@ -3,6 +3,12 @@ import { parentPort, workerData } from "worker_threads";
 import { createMimicHttpClient } from "../utils/clientUtils.js";
 import { randomBoolean, randomString } from "../utils/randomUtils.js";
 
+export const info = {
+  id: "http_flood",
+  name: "HTTP/Flood",
+  description: "Standard HTTP flood attack",
+};
+
 const startAttack = () => {
   const { target, proxies, userAgents, duration, packetDelay, packetSize } =
     workerData;

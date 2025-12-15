@@ -111,7 +111,6 @@ function ConfigureProxiesAndAgentsView() {
     </div>
   );
 }
-
 function App() {
   const { t } = useTranslation();
   const [isAttacking, setIsAttacking] = useState(false);
@@ -134,6 +133,7 @@ function App() {
   const [currentTask, setCurrentTask] = useState<NodeJS.Timeout | null>(null);
   const [audioVol, setAudioVol] = useState(100);
   const [openedConfig, setOpenedConfig] = useState(false);
+  const [methods, setMethods] = useState<any[]>([]);
 
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -228,6 +228,7 @@ function App() {
   };
 
   const startAttack = (isQuick?: boolean) => {
+  const startAttack = (isQuick?: boolean) => {
     if (!target.trim()) {
       alert(t("enter_target_alert"));
       return;
@@ -241,8 +242,7 @@ function App() {
     }));
     addLog(t("preparing_attack"));
 
-    // Play audio
-    if (audioRef.current) {
+    // Play audiocurrent) {
       audioRef.current.currentTime = isQuick ? 9.5 : 0;
       audioRef.current.volume = audioVol / 100;
       audioRef.current.play();
@@ -392,11 +392,11 @@ function App() {
                   } w-full px-4 py-2 border border-pink-200 rounded-lg outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200`}
                   disabled={isAttacking}
                 >
-                  <option value="http_flood">HTTP/Flood</option>
-                  <option value="http_bypass">HTTP/Bypass</option>
-                  <option value="http_slowloris">HTTP/Slowloris</option>
-                  <option value="tcp_flood">TCP/Flood</option>
-                  <option value="minecraft_ping">Minecraft/Ping</option>
+                  {methods.map((method) => (
+                    <option key={method.id} value={method.id}>
+                      {method.name}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div>
