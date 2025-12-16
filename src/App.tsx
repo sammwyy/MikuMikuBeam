@@ -218,6 +218,8 @@ function App() {
       setIsAttacking(false);
     });
 
+    socket.emit("getAttacks");
+
     return () => {
       socket.off("attacks");
       socket.off("stats");
@@ -236,7 +238,6 @@ function App() {
   };
 
   const startAttack = (isQuick?: boolean) => {
-  const startAttack = (isQuick?: boolean) => {
     if (!target.trim()) {
       alert(t("enter_target_alert"));
       return;
@@ -250,7 +251,8 @@ function App() {
     }));
     addLog(t("preparing_attack"));
 
-    // Play audiocurrent) {
+    // Play audio
+    if (audioRef.current) {
       audioRef.current.currentTime = isQuick ? 9.5 : 0;
       audioRef.current.volume = audioVol / 100;
       audioRef.current.play();

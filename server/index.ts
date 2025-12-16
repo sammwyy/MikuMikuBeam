@@ -14,32 +14,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const __prod = process.env.NODE_ENV === "production";
 
-// Define the workers based on attack type
-const attackWorkers: Record<string, string> = {};
-const attackMethods: any[] = [];
-const workersDir = join(__dirname, "workers");
 
-try {
-  const files = readdirSync(workersDir);
-  for (const file of files) {
-    if (file.endsWith("Attack.js")) {
-      const filePath = join(workersDir, file);
-      const fileUrl = pathToFileURL(filePath).href;
-      const module = await import(fileUrl);
-
-      if (module.info) {
-        attackWorkers[module.info.id] = `./workers/${file}`;
-        attackMethods.push(module.info);
-      }
-    }
-  }
-  console.log(
-    "Loaded workers:",
-    attackMethods.map((m) => m.name)
-  );
-} catch (error) {
-  console.error("Error loading workers:", error);
-}
 
 const app = express();
 const httpServer = createServer(app);
@@ -97,6 +72,10 @@ io.on("connection", (socket) => {
   
   // Send available attacks to client
   socket.emit("attacks", availableAttacks);
+
+  socket.on("getAttacks", () => {
+    socket.emit("attacks", availableAttacks);
+  });
 
   socket.on("startAttack", (params) => {
     const { target, duration, packetDelay, attackMethod, packetSize } = params;
@@ -166,7 +145,7 @@ io.on("connection", (socket) => {
 app.get("/methods", (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
   res.setHeader("Content-Type", "application/json");
-  res.send(attackMethods);
+  res.send(availableAttacks);
 });
 
 app.get("/configuration", (req, res) => {
