@@ -14,6 +14,33 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const __prod = process.env.NODE_ENV === "production";
 
+// Define the workers based on attack type
+const attackWorkers: Record<string, string> = {};
+const attackMethods: any[] = [];
+const workersDir = join(__dirname, "workers");
+
+try {
+  const files = readdirSync(workersDir);
+  for (const file of files) {
+    if (file.endsWith("Attack.js")) {
+      const filePath = join(workersDir, file);
+      const fileUrl = pathToFileURL(filePath).href;
+      const module = await import(fileUrl);
+
+      if (module.info) {
+        attackWorkers[module.info.id] = `./workers/${file}`;
+        attackMethods.push(module.info);
+      }
+    }
+  }
+  console.log(
+    "Loaded workers:",
+    attackMethods.map((m) => m.name)
+  );
+} catch (error) {
+  console.error("Error loading workers:", error);
+}
+
 const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
@@ -28,7 +55,7 @@ const proxies = loadProxies();
 const userAgents = loadUserAgents();
 
 console.log("Proxies loaded:", proxies.length);
-console.log("User Agents loaded:", userAgents.length);
+console.log("User agents loaded:", userAgents.length);
 
 // Dynamic worker loading
 const attackWorkers: Record<string, string> = {};
@@ -79,7 +106,7 @@ io.on("connection", (socket) => {
 
     if (!attackWorkerFile || !attackInfo) {
       socket.emit("stats", {
-        log: `❌ Attack Type Not Supported: ${attackMethod}`,
+        log: `❌ Unsupported attack type: ${attackMethod}`,
       });
       return;
     }
@@ -89,7 +116,7 @@ io.on("connection", (socket) => {
       .filter((proxy) => attackInfo.supportedProtocols.includes(proxy.protocol));
 
     socket.emit("stats", {
-      log: `🍒 Using ${filteredProxies.length} filtered proxies to perform the attack.`,
+      log: `🍒 Using ${filteredProxies.length} filtered proxies to perform attack.`,
       bots: filteredProxies.length,
     });
 
@@ -134,6 +161,12 @@ io.on("connection", (socket) => {
     }
     console.log("Client disconnected");
   });
+});
+
+app.get("/methods", (req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
+  res.setHeader("Content-Type", "application/json");
+  res.send(attackMethods);
 });
 
 app.get("/configuration", (req, res) => {
