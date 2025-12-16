@@ -5,8 +5,9 @@ import { randomBoolean, randomString } from "../utils/randomUtils.js";
 
 export const info = {
   id: "http_flood",
-  name: "HTTP/Flood",
-  description: "Standard HTTP flood attack",
+  name: "HTTP Flood",
+  description: "Floods the target with HTTP requests.",
+  supportedProtocols: ["http", "https", "socks4", "socks5"],
 };
 
 const startAttack = () => {

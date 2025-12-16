@@ -4,8 +4,9 @@ import { pingMinecraftServer } from "../utils/mcUtils.js";
 
 export const info = {
   id: "minecraft_ping",
-  name: "Minecraft/Ping",
-  description: "Minecraft ping attack",
+  name: "Minecraft Ping",
+  description: "Spams Minecraft server list pings.",
+  supportedProtocols: ["socks4", "socks5"],
 };
 
 const startAttack = () => {

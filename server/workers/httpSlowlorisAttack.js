@@ -6,8 +6,9 @@ import { randomString } from "../utils/randomUtils.js";
 
 export const info = {
   id: "http_slowloris",
-  name: "HTTP/Slowloris",
-  description: "Slowloris attack",
+  name: "HTTP Slowloris",
+  description: "Keeps connections open to exhaust server resources.",
+  supportedProtocols: ["socks4", "socks5"],
 };
 
 const startAttack = () => {

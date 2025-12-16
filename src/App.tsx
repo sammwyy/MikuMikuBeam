@@ -133,7 +133,7 @@ function App() {
   const [currentTask, setCurrentTask] = useState<NodeJS.Timeout | null>(null);
   const [audioVol, setAudioVol] = useState(100);
   const [openedConfig, setOpenedConfig] = useState(false);
-  const [methods, setMethods] = useState<any[]>([]);
+  const [availableAttacks, setAvailableAttacks] = useState<any[]>([]);
 
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -197,6 +197,13 @@ function App() {
   }, [lastUpdatedPPS, lastTotalPackets, stats.totalPackets]);
 
   useEffect(() => {
+    socket.on("attacks", (attacks) => {
+      setAvailableAttacks(attacks);
+      if (attacks.length > 0) {
+        setAttackMethod(attacks[0].id);
+      }
+    });
+
     socket.on("stats", (data) => {
       setStats((old) => ({
         pps: data.pps || old.pps,
@@ -211,7 +218,10 @@ function App() {
       setIsAttacking(false);
     });
 
+    socket.emit("getAttacks");
+
     return () => {
+      socket.off("attacks");
       socket.off("stats");
       socket.off("attackEnd");
     };
@@ -228,7 +238,6 @@ function App() {
   };
 
   const startAttack = (isQuick?: boolean) => {
-  const startAttack = (isQuick?: boolean) => {
     if (!target.trim()) {
       alert(t("enter_target_alert"));
       return;
@@ -242,7 +251,8 @@ function App() {
     }));
     addLog(t("preparing_attack"));
 
-    // Play audiocurrent) {
+    // Play audio
+    if (audioRef.current) {
       audioRef.current.currentTime = isQuick ? 9.5 : 0;
       audioRef.current.volume = audioVol / 100;
       audioRef.current.play();
@@ -392,9 +402,9 @@ function App() {
                   } w-full px-4 py-2 border border-pink-200 rounded-lg outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200`}
                   disabled={isAttacking}
                 >
-                  {methods.map((method) => (
-                    <option key={method.id} value={method.id}>
-                      {method.name}
+                  {availableAttacks.map((attack) => (
+                    <option key={attack.id} value={attack.id}>
+                      {attack.name}
                     </option>
                   ))}
                 </select>

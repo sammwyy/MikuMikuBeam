@@ -4,14 +4,14 @@
 # STAGE 1: BUILDER - Used for installing dev dependencies and compiling/bundling
 ################################################################################
 # Use a full Node.js image for building (contains compilers and tools)
-FROM node:20-slim as builder
+FROM node:20-slim AS builder
 
 # Set the working directory inside the container
 WORKDIR /app
 
-# Copy package.json and package-lock.json first to leverage layer caching
-# If these files don't change, subsequent builds skip dependency install
-COPY package*.json ./
+# Copy package.json first to leverage layer caching
+# We skip package-lock.json to avoid cross-platform issues with optional dependencies
+COPY package.json ./
 
 # Install all dependencies (development and production)
 # Note: If you are using 'bun install' or 'yarn install', replace 'npm install'
@@ -28,10 +28,10 @@ RUN npm run build
 # STAGE 2: PRODUCTION - Used for running the compiled application
 ################################################################################
 # Use a minimal Node.js image for the final production image (smaller footprint)
-FROM node:20-slim as production
+FROM node:20-slim AS production
 
 # Set environment to production
-ENV NODE_ENV production
+ENV NODE_ENV=production
 
 # Set the working directory
 WORKDIR /app
