@@ -23,5 +23,18 @@
   "made_by": "v1.0 hecho por",
   "translated_by": "traducido por",
   "translator_name": "miguerubsk",
-  "translator_url": "https://github.com/miguerubsk"
+  "translator_url": "https://github.com/miguerubsk",
+  "server_connected": "🍤 Conectado al servidor.",
+  "unsupported_attack_type": "❌ Tipo de ataque no soportado: {{type}}",
+  "using_proxies": "🍒 Usando {{count}} proxies filtrados para realizar el ataque.",
+  "worker_error": "❌ Error del worker: {{error}}",
+  "request_success": "✅ Petición exitosa desde {{proxy}} hacia {{target}}",
+  "request_failed": "❌ Petición fallida desde {{proxy}} hacia {{target}}: {{error}}",
+  "attack_finished": "Ataque finalizado",
+  "mc_ping_success": "✅ Petición MC Ping+MOTD desde {{proxy}} hacia {{target}} ({{banner}})",
+  "mc_ping_failed": "❌ Petición MC Ping+MOTD fallida desde {{proxy}} hacia {{target}}: {{error}}",
+  "packet_sent": "✅ Paquete enviado desde {{proxy}} hacia {{target}}",
+  "packet_failed": "❌ Paquete fallido desde {{proxy}} hacia {{target}}: {{error}}",
+  "connection_closed": "⚠ Conexión cerrada desde {{proxy}} hacia {{target}}",
+  "request_sent": "✅ Petición enviada desde {{proxy}} hacia {{target}}"
 }

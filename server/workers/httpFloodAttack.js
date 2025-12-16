@@ -32,12 +32,25 @@ const startAttack = () => {
 
       totalPackets++;
       parentPort.postMessage({
-        log: `✅ Request successful from ${proxy.protocol}://${proxy.host}:${proxy.port} to ${fixedTarget}`,
+        log: {
+          key: "request_success",
+          params: {
+            proxy: `${proxy.protocol}://${proxy.host}:${proxy.port}`,
+            target: fixedTarget,
+          },
+        },
         totalPackets,
       });
     } catch (error) {
       parentPort.postMessage({
-        log: `❌ Request failed from ${proxy.protocol}://${proxy.host}:${proxy.port} to ${fixedTarget}: ${error.message}`,
+        log: {
+          key: "request_failed",
+          params: {
+            proxy: `${proxy.protocol}://${proxy.host}:${proxy.port}`,
+            target: fixedTarget,
+            error: error.message,
+          },
+        },
         totalPackets,
       });
     }
@@ -48,7 +61,7 @@ const startAttack = () => {
 
     if (elapsedTime >= duration) {
       clearInterval(interval);
-      parentPort.postMessage({ log: "Attack finished", totalPackets });
+      parentPort.postMessage({ log: { key: "attack_finished" }, totalPackets });
       process.exit(0);
     }
 

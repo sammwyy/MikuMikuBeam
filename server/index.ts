@@ -67,7 +67,7 @@ io.on("connection", (socket) => {
     pps: 0,
     bots: proxies.length,
     totalPackets: 0,
-    log: "🍤 Connected to the server.",
+    log: { key: "server_connected" },
   });
   
   // Send available attacks to client
@@ -85,7 +85,7 @@ io.on("connection", (socket) => {
 
     if (!attackWorkerFile || !attackInfo) {
       socket.emit("stats", {
-        log: `❌ Unsupported attack type: ${attackMethod}`,
+        log: { key: "unsupported_attack_type", params: { type: attackMethod } },
       });
       return;
     }
@@ -95,7 +95,7 @@ io.on("connection", (socket) => {
       .filter((proxy) => attackInfo.supportedProtocols.includes(proxy.protocol));
 
     socket.emit("stats", {
-      log: `🍒 Using ${filteredProxies.length} filtered proxies to perform attack.`,
+      log: { key: "using_proxies", params: { count: filteredProxies.length } },
       bots: filteredProxies.length,
     });
 
@@ -114,7 +114,7 @@ io.on("connection", (socket) => {
 
     worker.on("error", (error: any) => {
       console.error(`Worker error: ${error.message}`);
-      socket.emit("stats", { log: `❌ Worker error: ${error.message}` });
+      socket.emit("stats", { log: { key: "worker_error", params: { error: error.message } } });
     });
 
     worker.on("exit", (code) => {

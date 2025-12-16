@@ -23,5 +23,18 @@
   "made_by": "v1.0 made by",
   "translated_by": "translated by",
   "translator_name": "Sammwy",
-  "translator_url": "https://github.com/sammwyy"
+  "translator_url": "https://github.com/sammwyy",
+  "server_connected": "🍤 Connected to the server.",
+  "unsupported_attack_type": "❌ Unsupported attack type: {{type}}",
+  "using_proxies": "🍒 Using {{count}} filtered proxies to perform attack.",
+  "worker_error": "❌ Worker error: {{error}}",
+  "request_success": "✅ Request successful from {{proxy}} to {{target}}",
+  "request_failed": "❌ Request failed from {{proxy}} to {{target}}: {{error}}",
+  "attack_finished": "Attack finished",
+  "mc_ping_success": "✅ MC Ping+MOTD Request from {{proxy}} to {{target}} ({{banner}})",
+  "mc_ping_failed": "❌ MC Ping+MOTD Request failed from {{proxy}} to {{target}}: {{error}}",
+  "packet_sent": "✅ Packet sent from {{proxy}} to {{target}}",
+  "packet_failed": "❌ Packet failed from {{proxy}} to {{target}}: {{error}}",
+  "connection_closed": "⚠ Connection closed from {{proxy}} to {{target}}",
+  "request_sent": "✅ Request sent from {{proxy}} to {{target}}"
 }

@@ -210,7 +210,13 @@ function App() {
         bots: data.bots || old.bots,
         totalPackets: data.totalPackets || old.totalPackets,
       }));
-      if (data.log) addLog(data.log);
+      if (data.log) {
+        if (typeof data.log === "string") {
+          addLog(data.log);
+        } else {
+          addLog(t(data.log.key, data.log.params));
+        }
+      }
       setProgress((prev) => (prev + 10) % 100);
     });
 
