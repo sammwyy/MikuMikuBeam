@@ -131,6 +131,7 @@ function App() {
   const [currentTask, setCurrentTask] = useState<NodeJS.Timeout | null>(null);
   const [audioVol, setAudioVol] = useState(100);
   const [openedConfig, setOpenedConfig] = useState(false);
+  const [availableAttacks, setAvailableAttacks] = useState<any[]>([]);
 
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -190,6 +191,13 @@ function App() {
   }, [lastUpdatedPPS, lastTotalPackets, stats.totalPackets]);
 
   useEffect(() => {
+    socket.on("attacks", (attacks) => {
+      setAvailableAttacks(attacks);
+      if (attacks.length > 0) {
+        setAttackMethod(attacks[0].id);
+      }
+    });
+
     socket.on("stats", (data) => {
       setStats((old) => ({
         pps: data.pps || old.pps,
@@ -205,6 +213,7 @@ function App() {
     });
 
     return () => {
+      socket.off("attacks");
       socket.off("stats");
       socket.off("attackEnd");
     };
@@ -385,11 +394,11 @@ function App() {
                   } w-full px-4 py-2 border border-pink-200 rounded-lg outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200`}
                   disabled={isAttacking}
                 >
-                  <option value="http_flood">HTTP/Flood</option>
-                  <option value="http_bypass">HTTP/Bypass</option>
-                  <option value="http_slowloris">HTTP/Slowloris</option>
-                  <option value="tcp_flood">TCP/Flood</option>
-                  <option value="minecraft_ping">Minecraft/Ping</option>
+                  {availableAttacks.map((attack) => (
+                    <option key={attack.id} value={attack.id}>
+                      {attack.name}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div>

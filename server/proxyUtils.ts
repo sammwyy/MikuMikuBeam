@@ -33,7 +33,7 @@ function inferProtocol(port: number | undefined): ProxyProtocol {
 /**
  * Ensures a proxy object is safe and normalized by adding default values if missing.
  */
-function normalizeProxy(proxy: Proxy): Proxy {
+export function normalizeProxy(proxy: Proxy): Proxy {
   const normalizedPort = proxy.port || DEFAULT_HTTP_PORT;
   const normalizedProtocol = proxy.protocol || inferProtocol(normalizedPort);
 
