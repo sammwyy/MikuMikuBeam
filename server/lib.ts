@@ -8,4 +8,4 @@ export interface Proxy {
   port: number;
 }
 
-export type AttackMethod = string;
+

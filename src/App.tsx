@@ -197,6 +197,23 @@ function App() {
   }, [lastUpdatedPPS, lastTotalPackets, stats.totalPackets]);
 
   useEffect(() => {
+    const fetchMethods = async () => {
+      try {
+        const baseUrl = getSocketURL();
+        const url = baseUrl.endsWith("/") ? `${baseUrl}methods` : `${baseUrl}/methods`;
+        const response = await fetch(url);
+        const attacks = await response.json();
+        setAvailableAttacks(attacks);
+        if (attacks.length > 0) {
+          setAttackMethod(attacks[0].id);
+        }
+      } catch (error) {
+        console.error("Failed to fetch methods:", error);
+      }
+    };
+
+    fetchMethods();
+
     socket.on("attacks", (attacks) => {
       setAvailableAttacks(attacks);
       if (attacks.length > 0) {

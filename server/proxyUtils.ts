@@ -1,4 +1,4 @@
-import { AttackMethod, Proxy, ProxyProtocol } from "./lib";
+import { Proxy, ProxyProtocol } from "./lib";
 
 const DEFAULT_HTTP_PORT = 8080;
 const DEFAULT_PROTOCOL: ProxyProtocol = "http";
@@ -10,14 +10,6 @@ const COMMON_PORTS: { [port: number]: ProxyProtocol } = {
   1081: "socks4",
   8080: "http",
   8443: "https",
-};
-
-const METHODS: { [key in AttackMethod]: ProxyProtocol[] } = {
-  http_flood: ["http", "https", "socks4", "socks5"],
-  http_bypass: ["http", "https", "socks4", "socks5"],
-  http_slowloris: ["socks4", "socks5"],
-  tcp_flood: ["socks4", "socks5"],
-  minecraft_ping: ["socks4", "socks5"],
 };
 
 /**
@@ -44,21 +36,4 @@ export function normalizeProxy(proxy: Proxy): Proxy {
   };
 }
 
-/**
- * Filters proxies based on the attack method and ensures safe parsing of proxies.
- */
-export function filterProxies(proxies: Proxy[], method: AttackMethod): Proxy[] {
-  let allowedProtocols = METHODS[method];
 
-  if (!allowedProtocols) {
-    if (method.startsWith("http")) {
-      allowedProtocols = ["http", "https", "socks4", "socks5"];
-    } else {
-      allowedProtocols = ["socks4", "socks5"];
-    }
-  }
-
-  return proxies
-    .map(normalizeProxy)
-    .filter((proxy) => allowedProtocols.includes(proxy.protocol));
-}

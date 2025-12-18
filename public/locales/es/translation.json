@@ -26,6 +26,7 @@
   "translator_url": "https://github.com/miguerubsk",
   "server_connected": "🍤 Conectado al servidor.",
   "unsupported_attack_type": "❌ Tipo de ataque no soportado: {{type}}",
+  "no_proxies": "❌ No hay proxies disponibles para este método de ataque.",
   "using_proxies": "🍒 Usando {{count}} proxies filtrados para realizar el ataque.",
   "worker_error": "❌ Error del worker: {{error}}",
   "request_success": "✅ Petición exitosa desde {{proxy}} hacia {{target}}",

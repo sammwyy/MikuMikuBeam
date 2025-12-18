@@ -45,7 +45,6 @@ const loadWorkers = async () => {
         const filePath = join(workersDir, file);
         const moduleUrl = pathToFileURL(filePath).href;
         const module = await import(moduleUrl);
-        
         if (module.info) {
           attackWorkers[module.info.id] = filePath;
           availableAttacks.push(module.info);
@@ -93,6 +92,13 @@ io.on("connection", (socket) => {
     const filteredProxies = proxies
       .map(normalizeProxy)
       .filter((proxy) => attackInfo.supportedProtocols.includes(proxy.protocol));
+
+    if (filteredProxies.length === 0) {
+      socket.emit("stats", {
+        log: { key: "no_proxies" },
+      });
+      return;
+    }
 
     socket.emit("stats", {
       log: { key: "using_proxies", params: { count: filteredProxies.length } },
@@ -193,7 +199,9 @@ app.post("/configuration", bodyParser.json(), (req, res) => {
 });
 
 const PORT = parseInt(process.env.PORT || "3000");
-loadWorkers().then(() => {
+
+try {
+  await loadWorkers();
   httpServer.listen(PORT, () => {
     if (__prod) {
       console.log(
@@ -203,4 +211,7 @@ loadWorkers().then(() => {
       console.log(`Server is running under development port ${PORT}`);
     }
   });
-});
+} catch (err) {
+  console.error("Failed to load workers:", err);
+  process.exit(1);
+}

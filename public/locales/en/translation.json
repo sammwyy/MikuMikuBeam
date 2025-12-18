@@ -26,6 +26,7 @@
   "translator_url": "https://github.com/sammwyy",
   "server_connected": "🍤 Connected to the server.",
   "unsupported_attack_type": "❌ Unsupported attack type: {{type}}",
+  "no_proxies": "❌ No proxies available for this attack method.",
   "using_proxies": "🍒 Using {{count}} filtered proxies to perform attack.",
   "worker_error": "❌ Worker error: {{error}}",
   "request_success": "✅ Request successful from {{proxy}} to {{target}}",
