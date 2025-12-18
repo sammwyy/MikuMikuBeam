@@ -16,6 +16,10 @@ i18n
     backend: {
       loadPath: '/locales/{{lng}}/{{ns}}.json',
     },
+  }, (err) => {
+    if (err) {
+      console.error('Failed to initialize i18n:', err);
+    }
   });
 
 i18n.on('languageChanged', (lng) => {
