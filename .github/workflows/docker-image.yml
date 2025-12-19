@@ -1,0 +1,152 @@
+name: Docker Image CI/CD (Multi-Arch & GitHub Release)
+
+on:
+  push:
+    branches:
+      - "master" # Production branch (gets 'latest' tag)
+      - "dev" # Development branch (gets 'beta' tag)
+    tags:
+      - "v*" # Trigger on Git tags (e.g., v1.0.0) for releases
+
+jobs:
+  # -----------------------------------------------------
+  # 1. LINUX BUILD JOB (Multi-Arch: AMD64, ARM64, ARMv7)
+  # -----------------------------------------------------
+  build-and-push-linux:
+    runs-on: ubuntu-latest
+
+    # Access the DOCKER_REPOSITORY variable set in GitHub Settings > Variables
+    env:
+      DOCKER_REPO: ${{ vars.DOCKER_REPOSITORY }}
+
+    # Export the repository name to the subsequent release job
+    outputs:
+      docker_repository: ${{ env.DOCKER_REPO }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 🌟 Mandatory for Multi-Arch build and GHA Cache on Linux runners
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver: docker-container
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_REPO }}
+          tags: |
+            # Primary tags based on branch/tag context
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
+            type=raw,value=beta,enable=${{ github.ref == 'refs/heads/dev' }}
+            type=ref,event=tag
+            # Short SHA tag for unique traceability
+            type=sha,format=short
+
+      - name: Build and push Linux images
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+          # 🟢 Linux Multi-Arch Platforms
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
+
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # -----------------------------------------------------
+  # 2. WINDOWS BUILD JOB (Single-Arch: AMD64)
+  # -----------------------------------------------------
+  # build-and-push-windows:
+  #   # ⚠️ MUST use a Windows runner for Windows builds
+  #   runs-on: windows-latest
+
+  #   env:
+  #     DOCKER_REPO: ${{ vars.DOCKER_REPOSITORY }}
+
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
+
+  #     - name: Build and push Windows image
+  #       uses: docker/build-push-action@v5
+  #       with:
+  #         context: .
+  #         file: ./Dockerfile
+  #         push: true
+  #         tags: ${{ steps.meta.outputs.tags }}
+  #         labels: ${{ steps.meta.outputs.labels }}
+  #         platforms: windows/amd64
+
+  #     - name: Log in to Docker Hub
+  #       uses: docker/login-action@v3
+  #       with:
+  #         username: ${{ secrets.DOCKER_USERNAME }}
+  #         password: ${{ secrets.DOCKER_PASSWORD }}
+
+  #     - name: Extract metadata (tags, labels) for Docker
+  #       id: meta
+  #       uses: docker/metadata-action@v5
+  #       with:
+  #         images: ${{ env.DOCKER_REPO }}
+  #         tags: |
+  #           type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
+  #           type=raw,value=beta,enable=${{ github.ref == 'refs/heads/dev' }}
+  #           type=ref,event=tag
+  #           type=sha,format=short
+
+  #     - name: Build and push Windows image
+  #       uses: docker/build-push-action@v5
+  #       with:
+  #         context: .
+  #         file: ./Dockerfile
+  #         push: true
+  #         tags: ${{ steps.meta.outputs.tags }}
+  #         labels: ${{ steps.meta.outputs.labels }}
+
+  #         # 🟢 Windows 64-bit Platform
+  #         platforms: windows/amd64
+
+  #         cache-from: type=gha
+  #         cache-to: type=gha,mode=max
+
+  # -----------------------------------------------------
+  # 3. CONDITIONAL JOB TO CREATE GITHUB RELEASE
+  # -----------------------------------------------------
+  create-github-release:
+    # Only runs when a Git tag is pushed (e.g., v1.0.0)
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    # Wait for the Linux build to complete (which exports the DOCKER_REPO output)
+    needs: build-and-push-linux
+
+    env:
+      # Use the output from the Linux job to define the environment variable
+      DOCKER_REPO: ${{ needs.build-and-push-linux.outputs.docker_repository }}
+
+    steps:
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }} # e.g., v1.0.0
+          name: Release ${{ github.ref_name }}
+          body: |
+            ### 🚀 New Release
+
+            This version has been published to Docker Hub with **Multi-Arch Support** (Linux and Windows).
+
+            - **Docker Tag:** `${{ env.DOCKER_REPO }}:${{ github.ref_name }}`
+            - [View on Docker Hub](https://hub.docker.com/r/${{ env.DOCKER_REPO }}/tags)

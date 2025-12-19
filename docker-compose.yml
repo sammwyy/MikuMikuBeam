@@ -1,7 +1,6 @@
-version: "3.8"
-
 services:
   app:
+    restart: unless-stopped
     build:
       context: .
       dockerfile: Dockerfile

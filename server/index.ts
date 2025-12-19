@@ -1,28 +1,20 @@
 import express from "express";
-import { readFileSync, writeFileSync } from "fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "fs";
 import { createServer } from "http";
 import { dirname, join } from "path";
 import { Server } from "socket.io";
-import { fileURLToPath } from "url";
+import { fileURLToPath, pathToFileURL } from "url";
 import { Worker } from "worker_threads";
 
 import bodyParser from "body-parser";
 import { currentPath, loadProxies, loadUserAgents } from "./fileLoader";
-import { AttackMethod } from "./lib";
-import { filterProxies } from "./proxyUtils";
-
-// Define the workers based on attack type
-const attackWorkers: { [key in AttackMethod]: string } = {
-  http_flood: "./workers/httpFloodAttack.js",
-  http_bypass: "./workers/httpBypassAttack.js",
-  http_slowloris: "./workers/httpSlowlorisAttack.js",
-  tcp_flood: "./workers/tcpFloodAttack.js",
-  minecraft_ping: "./workers/minecraftPingAttack.js",
-};
+import { normalizeProxy } from "./proxyUtils";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const __prod = process.env.NODE_ENV === "production";
+
+
 
 const app = express();
 const httpServer = createServer(app);
@@ -40,6 +32,31 @@ const userAgents = loadUserAgents();
 console.log("Proxies loaded:", proxies.length);
 console.log("User agents loaded:", userAgents.length);
 
+// Dynamic worker loading
+const attackWorkers: Record<string, string> = {};
+const availableAttacks: any[] = [];
+
+const loadWorkers = async () => {
+  const workersDir = join(__dirname, "workers");
+  if (existsSync(workersDir)) {
+    const files = readdirSync(workersDir).filter((file) => file.endsWith(".js"));
+    for (const file of files) {
+      try {
+        const filePath = join(workersDir, file);
+        const moduleUrl = pathToFileURL(filePath).href;
+        const module = await import(moduleUrl);
+        if (module.info) {
+          attackWorkers[module.info.id] = filePath;
+          availableAttacks.push(module.info);
+          console.log(`Loaded worker: ${module.info.name} (${module.info.id})`);
+        }
+      } catch (err) {
+        console.error(`Failed to load worker ${file}:`, err);
+      }
+    }
+  }
+};
+
 app.use(express.static(join(__dirname, "public")));
 
 io.on("connection", (socket) => {
@@ -49,27 +66,46 @@ io.on("connection", (socket) => {
     pps: 0,
     bots: proxies.length,
     totalPackets: 0,
-    log: "🍤 Connected to the server.",
+    log: { key: "server_connected" },
+  });
+  
+  // Send available attacks to client
+  socket.emit("attacks", availableAttacks);
+
+  socket.on("getAttacks", () => {
+    socket.emit("attacks", availableAttacks);
   });
 
   socket.on("startAttack", (params) => {
     const { target, duration, packetDelay, attackMethod, packetSize } = params;
-    const filteredProxies = filterProxies(proxies, attackMethod);
+    
     const attackWorkerFile = attackWorkers[attackMethod];
+    const attackInfo = availableAttacks.find((a) => a.id === attackMethod);
 
-    if (!attackWorkerFile) {
+    if (!attackWorkerFile || !attackInfo) {
       socket.emit("stats", {
-        log: `❌ Unsupported attack type: ${attackMethod}`,
+        log: { key: "unsupported_attack_type", params: { type: attackMethod } },
+      });
+      return;
+    }
+
+    const filteredProxies = proxies
+      .map(normalizeProxy)
+      .filter((proxy) => attackInfo.supportedProtocols.includes(proxy.protocol));
+
+    if (filteredProxies.length === 0) {
+      socket.emit("stats", {
+        log: { key: "no_proxies" },
       });
       return;
     }
 
     socket.emit("stats", {
-      log: `🍒 Using ${filteredProxies.length} filtered proxies to perform attack.`,
+      log: { key: "using_proxies", params: { count: filteredProxies.length } },
       bots: filteredProxies.length,
     });
 
-    const worker = new Worker(join(__dirname, attackWorkerFile), {
+    const worker = new Worker(attackWorkerFile, {
       workerData: {
         target,
         proxies: filteredProxies,
@@ -82,9 +118,9 @@ io.on("connection", (socket) => {
 
     worker.on("message", (message) => socket.emit("stats", message));
 
-    worker.on("error", (error) => {
+    worker.on("error", (error: any) => {
       console.error(`Worker error: ${error.message}`);
-      socket.emit("stats", { log: `❌ Worker error: ${error.message}` });
+      socket.emit("stats", { log: { key: "worker_error", params: { error: error.message } } });
     });
 
     worker.on("exit", (code) => {
@@ -110,6 +146,12 @@ io.on("connection", (socket) => {
     }
     console.log("Client disconnected");
   });
+});
+
+app.get("/methods", (req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
+  res.setHeader("Content-Type", "application/json");
+  res.send(availableAttacks);
 });
 
 app.get("/configuration", (req, res) => {
@@ -157,12 +199,19 @@ app.post("/configuration", bodyParser.json(), (req, res) => {
 });
 
 const PORT = parseInt(process.env.PORT || "3000");
-httpServer.listen(PORT, () => {
-  if (__prod) {
-    console.log(
-      `(Production Mode) Client and server is running under http://localhost:${PORT}`
-    );
-  } else {
-    console.log(`Server is running under development port ${PORT}`);
-  }
-});
+
+try {
+  await loadWorkers();
+  httpServer.listen(PORT, () => {
+    if (__prod) {
+      console.log(
+        `(Production Mode) Client and server is running under http://localhost:${PORT}`
+      );
+    } else {
+      console.log(`Server is running under development port ${PORT}`);
+    }
+  });
+} catch (err) {
+  console.error("Failed to load workers:", err);
+  process.exit(1);
+}
