@@ -7,18 +7,77 @@ A fun and visually appealing stress testing server with a **Miku-themed** fronte
 ## Features 🎉
 
 - 🐳 **Docker Ready**: MMB is ready to be built and run in a Docker container.
-- 🌐 **Real-time Attack Visualization**: View your attack’s progress and statistics in real-time as it runs. 🔥
-- 🎶 **Miku-themed UI**: A cute and vibrant design with Miku’s vibe to make the process more fun. Includes a banger song to keep you pumped! 🎧
+- 🌐 **Real-time Attack Visualization**: View your attack's progress and statistics in real-time as it runs. 🔥
+- 🎶 **Miku-themed UI**: A cute and vibrant design with Miku's vibe to make the process more fun. Includes a banger song to keep you pumped! 🎧
 - 🧑‍💻 **Configurable Attack Parameters**: Easily set the attack method, packet size, duration, and packet delay via the frontend interface.
-- 🛠️ **Worker-Based Attack Handling**: The server processes attacks in separate workers for optimal performance and scalability.
+- 🛠️ **Multi-threaded Attack Handling**: The server processes attacks using multiple goroutines for optimal performance and scalability.
 - 📊 **Live Stats**: Track the success and failure of each attack in real-time. See how many packets are sent and whether they succeed or fail.
 - 🖼️ **Aesthetic Design**: A visually cute interface to make your experience enjoyable. 🌸
 - 📡 **Attack Methods:**:
   - `HTTP Flood` - Send random HTTP requests
   - `HTTP Bypass` - Send HTTP requests that mimics real requests (Redirects, cookies, headers, resources...)
-  - `HTTP Slowloris` - Send HTTP requests and keep the connection open
+  - `HTTP Slowloris` - Send slow HTTP requests and keep the connection open
   - `Minecraft Ping` - Send Minecraft ping/motd requests
   - `TCP Flood` - Send random TCP packets
+- 🚀 **CLI Support**: Run attacks from the command line with colored output and real-time stats
+- 🔄 **Multi-client Support**: Multiple web clients can run attacks simultaneously
+- 🎯 **Per-client Attack Management**: Each client has its own isolated attack instance
+
+## Project Structure 🏗️
+
+The project is divided into four main components:
+
+### 📱 **CLI** (`cmd/mmb-cli/`)
+Command-line interface for running attacks from terminal:
+- Colored output with real-time statistics
+- `--verbose` flag for detailed attack logs
+- `--no-proxy` flag to run without proxies
+- `--threads` flag to control concurrency
+
+### ⚙️ **Core** (`internal/`)
+The engine and attack implementations:
+- **`engine/`** - Attack coordination and management
+- **`attacks/`** - Individual attack method implementations
+  - `http/` - HTTP-based attacks (flood, bypass, slowloris)
+  - `tcp/` - TCP-based attacks (flood)
+  - `game/` - Game-specific attacks (minecraft ping)
+- **`config/`** - Configuration management
+- **`proxy/`** - Proxy loading and filtering
+- **`netutil/`** - Network utilities (HTTP/TCP clients with proxy support)
+
+### 🌐 **Server** (`cmd/mmb-server/`)
+Web server with Socket.IO support:
+- REST API endpoints (`/attacks`, `/configuration`)
+- Real-time communication via Socket.IO
+- Static file serving for web client
+- Multi-client attack management
+
+### 🎨 **Web Client** (`web-client/`)
+React-based frontend:
+- Modern UI with Miku theme
+- Real-time attack visualization
+- Socket.IO integration for live updates
+- Configuration management interface
+
+## Quick Start 🚀
+
+```bash
+# 1. Clone and setup
+git clone https://github.com/sammwyy/mikumikubeam.git
+cd mikumikubeam
+
+# 2. Install dependencies
+make prepare
+
+# 3. Create required files
+echo "http://proxy1:8080" > data/proxies.txt
+echo "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" > data/uas.txt
+
+# 4. Build and run
+make all && make run-server
+
+# 5. Open http://localhost:3000 in your browser
+```
 
 ## Setup 🛠️
 
@@ -26,7 +85,8 @@ A fun and visually appealing stress testing server with a **Miku-themed** fronte
 
 Make sure you have the following installed:
 
-- Node.js (v14 or above) 🌱
+- Go (v1.21 or above) 🐹
+- Node.js (v18 or above) 🌱
 - npm (Node Package Manager) 📦
 
 ### Development Mode 🔧
@@ -38,24 +98,30 @@ Make sure you have the following installed:
    cd mikumikubeam
    ```
 
-2. Install the required dependencies:
+2. Install dependencies:
 
    ```bash
-   npm install
+   make prepare
    ```
 
 3. Create the necessary files:
-   - `data/proxies.txt` - List of proxies.
-   - `data/uas.txt` - List of user agents.
+   - `data/proxies.txt` - List of proxies (one per line).
+   - `data/uas.txt` - List of user agents (one per line).
 
-4. Run the server in development mode:
+4. Build everything (web client + binaries):
 
    ```bash
-   npm run dev
+   make all
    ```
 
-   - The **frontend** runs on `http://localhost:5173`.
-   - The **backend** runs on `http://localhost:3000`.
+5. Run the server:
+
+   ```bash
+   make run-server
+   ```
+
+   - The **web interface** runs on `http://localhost:3000`.
+   - The **API** runs on `http://localhost:3000/api`.
 
 ---
 
@@ -68,22 +134,22 @@ Make sure you have the following installed:
    cd mikumikubeam
    ```
 
-2. Install the dependencies:
+2. Install dependencies:
 
    ```bash
-   npm install
+   make prepare
    ```
 
-3. Build the project:
+3. Build everything:
 
    ```bash
-   npm run build
+   make all
    ```
 
 4. Start the server in production mode:
 
    ```bash
-   npm run start
+   ./bin/mmb-server
    ```
 
    In production mode, both the **frontend** and **backend** are served on the same port (`http://localhost:3000`).
@@ -92,7 +158,9 @@ Make sure you have the following installed:
 
 ## Usage ⚙️
 
-Once the server is up and running, you can interact with it via the frontend:
+### Web Interface 🌐
+
+Once the server is up and running, you can interact with it via the web interface:
 
 1. **Start Attack**:
    - Set up the attack parameters: target URL, attack method (HTTP Flood, Slowloris, TCP, etc...), packet size, duration, and delay.
@@ -100,6 +168,28 @@ Once the server is up and running, you can interact with it via the frontend:
 
 2. **Stop Attack**:
    - Press "Stop Attack" to terminate the ongoing attack.
+
+3. **Multiple Clients**:
+   - Open multiple browser tabs/windows to run different attacks simultaneously
+   - Each client maintains its own attack instance
+
+### CLI Interface 💻
+
+Run attacks directly from the command line:
+
+```bash
+# Basic attack
+./bin/mmb-cli attack http_flood http://example.com
+
+# With custom parameters
+./bin/mmb-cli attack http_bypass http://example.com --duration 120 --delay 100 --packet-size 1024 --threads 8
+
+# Verbose mode (shows detailed logs)
+./bin/mmb-cli attack tcp_flood http://example.com --verbose
+
+# Without proxies
+./bin/mmb-cli attack minecraft_ping minecraft.example.com:25565 --no-proxy
+```
 
 ### Example Request
 
@@ -109,19 +199,55 @@ Once the server is up and running, you can interact with it via the frontend:
   "attackMethod": "http_flood",
   "packetSize": 512,
   "duration": 60,
-  "packetDelay": 500
+  "packetDelay": 500,
+  "threads": 4
 }
 ```
 
 ## Adding Proxies and User-Agents
 
-Access to the ``data/proxies.txt`` and ``data/uas.txt`` can now be done fully in the frontend. Click the text button to the right of the beam button to open up the editor.
+Access to the `data/proxies.txt` and `data/uas.txt` can now be done fully in the web interface. Click the text button to the right of the beam button to open up the editor.
 
 ![AnnotatedImage](docs/annotated-button.png)
 
-## Worker-Based Attack Handling 🔧💡
+## Multi-threaded Attack Handling 🔧💡
 
-Each attack type is handled in a separate worker thread, ensuring that the main server remains responsive. The attack workers are dynamically loaded based on the selected attack method (HTTP, etc...).
+Each attack runs in multiple goroutines (threads), ensuring optimal performance and scalability. The attack workers are dynamically loaded based on the selected attack method (HTTP, TCP, etc...).
+
+### Attack Methods Implementation:
+
+- **HTTP Flood**: Random GET/POST requests with configurable payloads
+- **HTTP Bypass**: Browser-mimicking requests with realistic headers and cookies
+- **HTTP Slowloris**: Slow HTTP requests that keep connections open
+- **TCP Flood**: Raw TCP packet flooding with random data
+- **Minecraft Ping**: Minecraft server status requests
+
+## Makefile Commands 🛠️
+
+```bash
+make prepare      # Install all dependencies (go mod tidy + npm install)
+make all          # Build everything (web client + CLI + server)
+make webclient    # Build React frontend only
+make cli          # Build CLI binary only
+make server       # Build server binary only
+make run-cli      # Run CLI with example attack
+make run-server   # Run web server
+make clean        # Clean build artifacts
+```
+
+### Quick Start Commands:
+
+```bash
+# Complete setup (recommended)
+make prepare && make all && make run-server
+
+# Or step by step
+make prepare      # Install dependencies
+make webclient    # Build frontend
+make cli          # Build CLI
+make server       # Build server
+make run-server   # Start server
+```
 
 ## To-Do 📝
 
@@ -138,25 +264,49 @@ Feel free to fork the repo and open pull requests with new attack protocols, bug
 
 ### Adding New Attack Methods ⚡
 
-To extend the server with new attack methods (e.g., Minecraft, TCP, UDP, DNS), you can create new worker files and add them to the server configuration.
+To extend the server with new attack methods, you can create new worker files and add them to the attack registry.
 
 For example:
 
-- Add a new attack method in the frontend settings.
-- Create the corresponding worker file (e.g., `minecraftAttack.js`).
-- Update the attack handler configuration to include the new method.
+1. Create a new attack worker in `internal/attacks/your_protocol/`:
 
-```javascript
-const attackHandlers = {
-  http_flood: "./workers/httpFloodAttack.js",
-  http_slowloris: "./workers/httpSlowlorisAttack.js",
-  tcp_flood: "./workers/tcpFloodAttack.js",
-  minecraft_ping: "./workers/minecraftPingAttack.js",
+```go
+package yourprotocol
 
-  // Add more protocols as needed!
-  your_protocol: "./workers/yourProtocolAttack.js"
-};
+import (
+    "context"
+    core "github.com/sammwyy/mikumikubeam/internal/engine"
+)
+
+type yourWorker struct{}
+
+func NewYourWorker() *yourWorker { return &yourWorker{} }
+
+func (w *yourWorker) Fire(ctx context.Context, params core.AttackParams, p core.Proxy, ua string, logCh chan<- core.AttackStats) error {
+    // Your attack implementation here
+    core.SendAttackLogIfVerbose(logCh, p, params.Target, params.Verbose)
+    return nil
+}
 ```
+
+2. Register the attack in `internal/engine/registry.go`:
+
+```go
+func NewRegistry() Registry {
+    return &registry{
+        workers: map[AttackKind]AttackWorker{
+            AttackHTTPFlood:     http.NewFloodWorker(),
+            AttackHTTPBypass:    http.NewBypassWorker(),
+            AttackHTTPSlowloris: http.NewSlowlorisWorker(),
+            AttackTCPFlood:      tcp.NewFloodWorker(),
+            AttackMinecraftPing: game.NewPingWorker(),
+            AttackYourProtocol:  yourprotocol.NewYourWorker(), // Add your attack
+        },
+    }
+}
+```
+
+3. Add the attack method to the web client's attack list.
 
 ---
 
@@ -168,11 +318,11 @@ const attackHandlers = {
 
 **2. It crashes on startup, giving a "concurrently" error**
 
-> Try running two terminals instead of one, in the first one use "npm run dev:client", and in the other one "npm run dev:server". (This happened to several people with Windows 11)
+> This is a Node.js/React issue. Make sure you have Node.js v18+ installed and run `npm install` in the `web-client` directory.
 
-**3. I go to "<http://localhost:3000>" and nothing appears.**
+**3. I go to "http://localhost:3000" and nothing appears.**
 
-> Port `3000` is the server port, to see the UI you must use port `5173` (<http://localhost:5173>)
+> Make sure you've built the web client with `make build-webclient` and the server is running with `./bin/mmb-server`.
 
 **4. Requests fail to be sent to the target server (Read timeout and variations)**
 
@@ -182,6 +332,26 @@ const attackHandlers = {
 > - `protocol://host:port`
 > - `host:port` (Uses http as default protocol)
 > - `host` (Uses 8080 as default port)
+
+**5. How do I run attacks without proxies?**
+
+> Use the `--no-proxy` flag in CLI or set `ALLOW_NO_PROXY=true` environment variable for the server.
+
+**6. Can I run multiple attacks simultaneously?**
+
+> Yes! The web server supports multiple clients running different attacks at the same time. Each client maintains its own attack instance.
+
+**7. The web client doesn't load or shows errors**
+
+> Make sure you've run `make all` to build the web client. The web client needs to be built before the server can serve it.
+
+**8. CLI shows "No proxies available" error**
+
+> Either add proxies to `data/proxies.txt` or use the `--no-proxy` flag to run without proxies.
+
+**9. Build fails with "module not found" errors**
+
+> Run `go mod tidy` to download all Go dependencies, then `cd web-client && npm install` for Node.js dependencies.
 
 ---
 
