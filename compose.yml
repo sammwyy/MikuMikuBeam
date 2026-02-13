@@ -1,0 +1,10 @@
+services:
+  mikumikubeam:
+    build: .
+    image: mikumikubeam:latest
+    container_name: mikumikubeam
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+    restart: always

@@ -1,5 +1,7 @@
 # Miku Miku Beam 💥⚡ (Network Stresser)
 
+[![Docker Image](https://github.com/miguerubsk/MikuMikuBeam/actions/workflows/docker-image.yml/badge.svg?branch=dev)](https://github.com/miguerubsk/MikuMikuBeam/actions/workflows/docker-image.yml)
+
 A fun and visually appealing stress testing server with a **Miku-themed** frontend, where you can configure and run attacks while enjoying a banger song in the background! 🎤✨
 
 ![Screenshot](docs/screenshot.png)
@@ -28,14 +30,18 @@ A fun and visually appealing stress testing server with a **Miku-themed** fronte
 The project is divided into four main components:
 
 ### 📱 **CLI** (`cmd/mmb-cli/`)
+
 Command-line interface for running attacks from terminal:
+
 - Colored output with real-time statistics
 - `--verbose` flag for detailed attack logs
 - `--no-proxy` flag to run without proxies
 - `--threads` flag to control concurrency
 
 ### ⚙️ **Core** (`internal/`)
+
 The engine and attack implementations:
+
 - **`engine/`** - Attack coordination and management
 - **`attacks/`** - Individual attack method implementations
   - `http/` - HTTP-based attacks (flood, bypass, slowloris)
@@ -46,14 +52,18 @@ The engine and attack implementations:
 - **`netutil/`** - Network utilities (HTTP/TCP clients with proxy support)
 
 ### 🌐 **Server** (`cmd/mmb-server/`)
+
 Web server with Socket.IO support:
+
 - REST API endpoints (`/attacks`, `/configuration`)
 - Real-time communication via Socket.IO
 - Static file serving for web client
 - Multi-client attack management
 
 ### 🎨 **Web Client** (`web-client/`)
+
 React-based frontend:
+
 - Modern UI with Miku theme
 - Real-time attack visualization
 - Socket.IO integration for live updates

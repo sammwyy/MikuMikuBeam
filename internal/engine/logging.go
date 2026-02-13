@@ -16,7 +16,7 @@ func SendAttackLog(logCh chan<- AttackStats, proxy Proxy, target string) {
 	select {
 	case logCh <- AttackStats{
 		Timestamp: time.Now(),
-		Log:       fmt.Sprintf("Miku miku beam from %s to %s", sourceIP, target),
+		Log:       fmt.Sprintf(`{"key":"log_attack_beam","params":{"source":"%s","target":"%s"}}`, sourceIP, target),
 	}:
 		// Successfully sent
 	default:

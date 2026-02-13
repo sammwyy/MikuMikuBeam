@@ -79,11 +79,11 @@ func main() {
 	io.On("connection", func(clients ...any) {
 		client := clients[0].(*socketio.Socket)
 
-		client.Emit("stats", map[string]any{
+			client.Emit("stats", map[string]any{
 			"pps":          0,
 			"proxies":      len(proxies),
 			"totalPackets": 0,
-			"log":          "Connected to the server.",
+			"log":          `{"key":"log_connected"}`,
 		})
 		log.Info().Msgf("socket connected id=%s", client.Id())
 
@@ -130,10 +130,10 @@ func main() {
 
 			kind := engine.AttackKind(req.AttackMethod)
 			filtered := proxy.FilterByMethod(proxies, kind)
-			client.Emit("stats", map[string]any{"log": "Using proxies to perform attack.", "proxies": len(filtered)})
+			client.Emit("stats", map[string]any{"log": `{"key":"log_using_proxies"}`, "proxies": len(filtered)})
 
 			if len(filtered) == 0 && !allowNoProxy {
-				msg := "No proxies available; set ALLOW_NO_PROXY=true or --no-proxy to run without proxies"
+				msg := `{"key":"error_no_proxies"}`
 				log.Warn().Msg(msg)
 				client.Emit("attackError", map[string]any{"message": msg})
 				return
@@ -216,25 +216,53 @@ func main() {
 		return c.String(http.StatusOK, "OK")
 	})
 
-	// Static file serving
+	// Determine static directory
 	staticDirs := []string{
 		filepath.Join("bin", "web-client"),
 		filepath.Join("web-client", "dist"),
 	}
-	mounted := false
+	var staticDir string
 	for _, dir := range staticDirs {
 		if fi, err := os.Stat(dir); err == nil && fi.IsDir() {
-			e.Static("/", dir)
-			indexPath := filepath.Join(dir, "index.html")
-			if _, err := os.Stat(indexPath); err == nil {
-				e.File("/", indexPath)
-			}
-			log.Info().Msgf("Serving static files from %s", dir)
-			mounted = true
+			staticDir = dir
 			break
 		}
 	}
-	if !mounted {
+
+	// Custom locales handler (Cascading: data/locales -> internal)
+	e.GET("/locales/:file", func(c echo.Context) error {
+		file := c.Param("file")
+		// Basic directory traversal protection
+		if strings.Contains(file, "..") || strings.Contains(file, "/") || strings.Contains(file, "\\") {
+			return c.NoContent(http.StatusBadRequest)
+		}
+
+		// 1. Try user-mounted "data/locales"
+		userPath := filepath.Join("data", "locales", file)
+		if _, err := os.Stat(userPath); err == nil {
+			return c.File(userPath)
+		}
+
+		// 2. Try default built-in assets
+		if staticDir != "" {
+			defaultPath := filepath.Join(staticDir, "locales", file)
+			if _, err := os.Stat(defaultPath); err == nil {
+				return c.File(defaultPath)
+			}
+		}
+
+		return c.NoContent(http.StatusNotFound)
+	})
+
+	// Static file serving
+	if staticDir != "" {
+		e.Static("/", staticDir)
+		indexPath := filepath.Join(staticDir, "index.html")
+		if _, err := os.Stat(indexPath); err == nil {
+			e.File("/", indexPath)
+		}
+		log.Info().Msgf("Serving static files from %s", staticDir)
+	} else {
 		log.Warn().Msg("Static web assets not found (bin/web-client or web-client/dist). Panel will be unavailable.")
 	}
 

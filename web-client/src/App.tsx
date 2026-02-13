@@ -1,5 +1,6 @@
 import { Bot, ScrollText, Wand2, Wifi, Zap } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { mmbClient } from "./lib/mmb-client";
 
 function isHostLocal(host: string) {
@@ -14,6 +15,7 @@ function isHostLocal(host: string) {
 }
 
 function ConfigureProxiesAndAgentsView() {
+  const { t } = useTranslation();
   const [loadingConfiguration, setLoadingConfiguration] = useState(false);
   const [configuration, setConfiguration] = useState<string[]>([]);
 
@@ -34,7 +36,7 @@ function ConfigureProxiesAndAgentsView() {
 
   function saveConfiguration() {
     mmbClient.setConfiguration(configuration[0], configuration[1]).then(() => {
-      alert("Saved");
+      alert(t("saved"));
       window.location.reload();
     });
   }
@@ -44,11 +46,11 @@ function ConfigureProxiesAndAgentsView() {
       {loadingConfiguration ? (
         <div className="flex flex-col items-center justify-center space-y-2">
           <img src="/loading.gif" className="rounded-sm shadow-sm" />
-          <p>Loading proxies.txt and uas.txt...</p>
+          <p>{t("loading_config")}</p>
         </div>
       ) : (
         <div className="w-[56rem] flex flex-col">
-          <p className="pl-1 mb-1 italic">proxies.txt</p>
+          <p className="pl-1 mb-1 italic">{t("proxies_label")}</p>
           <textarea
             value={configuration[0]}
             className="w-full h-40 p-2 border-black/10 border-[1px] rounded-sm resize-none"
@@ -57,7 +59,7 @@ function ConfigureProxiesAndAgentsView() {
             }
             placeholder="socks5://0.0.0.0&#10;socks4://user:pass@0.0.0.0:12345"
           ></textarea>
-          <p className="pl-1 mt-2 mb-1 italic">uas.txt</p>
+          <p className="pl-1 mt-2 mb-1 italic">{t("uas_label")}</p>
           <textarea
             value={configuration[1]}
             className="w-full h-40 p-2 border-black/10 border-[1px] rounded-sm resize-none"
@@ -70,7 +72,7 @@ function ConfigureProxiesAndAgentsView() {
             onClick={saveConfiguration}
             className="p-4 mt-4 text-white bg-gray-800 rounded-md hover:bg-gray-900"
           >
-            Write Changes
+            {t("write_changes")}
           </button>
         </div>
       )}
@@ -79,6 +81,7 @@ function ConfigureProxiesAndAgentsView() {
 }
 
 function App() {
+  const { t } = useTranslation();
   const [isAttacking, setIsAttacking] = useState(false);
   const [actuallyAttacking, setActuallyAttacking] = useState(false);
   const [animState, setAnimState] = useState(0);
@@ -92,10 +95,14 @@ function App() {
   const [stats, setStats] = useState({ pps: 0, bots: 0, totalPackets: 0 });
   const [lastUpdatedPPS, setLastUpdatedPPS] = useState(Date.now());
   const [lastTotalPackets, setLastTotalPackets] = useState(0);
-  const [currentTask, setCurrentTask] = useState<ReturnType<typeof setTimeout> | null>(null);
+  const [currentTask, setCurrentTask] = useState<ReturnType<
+    typeof setTimeout
+  > | null>(null);
   const [audioVol, setAudioVol] = useState(100);
   const [openedConfig, setOpenedConfig] = useState(false);
-  const [socketState, setSocketState] = useState<'disconnected' | 'connecting' | 'connected'>("connecting");
+  const [socketState, setSocketState] = useState<
+    "disconnected" | "connecting" | "connected"
+  >("connecting");
   const [lastSocketError, setLastSocketError] = useState<string>("");
 
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -106,7 +113,11 @@ function App() {
       const handler = () => {
         if (audio.paused) return;
 
-        if (animState !== 2 && audio.currentTime > 5.24 && audio.currentTime < 9.4) {
+        if (
+          animState !== 2 &&
+          audio.currentTime > 5.24 &&
+          audio.currentTime < 9.4
+        ) {
           setAnimState(2);
         }
         if (audio.currentTime > 17.53) {
@@ -154,9 +165,18 @@ function App() {
   useEffect(() => {
     // socket state handlers
     setSocketState("connecting");
-    mmbClient.onConnect(() => { setSocketState("connected"); setLastSocketError(""); });
-    mmbClient.onConnectError((e) => { setSocketState("disconnected"); setLastSocketError(String(e?.message || e)); });
-    mmbClient.onDisconnect((r) => { setSocketState("disconnected"); setLastSocketError(String(r || "")); });
+    mmbClient.onConnect(() => {
+      setSocketState("connected");
+      setLastSocketError("");
+    });
+    mmbClient.onConnectError((e) => {
+      setSocketState("disconnected");
+      setLastSocketError(String(e?.message || e));
+    });
+    mmbClient.onDisconnect((r) => {
+      setSocketState("disconnected");
+      setLastSocketError(String(r || ""));
+    });
 
     mmbClient.onStats((data) => {
       setStats((old) => ({
@@ -173,17 +193,20 @@ function App() {
     });
 
     mmbClient.onAttackAccepted((info) => {
-      addLog(`✅ Attack accepted (proxies=${info?.proxies ?? 0})`);
+      addLog(t("attack_accepted", { proxies: info?.proxies ?? 0 }));
     });
     mmbClient.onAttackError((info) => {
-      addLog(`❌ Attack error: ${info?.message || ''}`);
+      addLog(t("attack_error", { message: info?.message || "" }));
       setIsAttacking(false);
     });
 
     return () => {
       mmbClient.offAll();
     };
-  }, []);
+  }, [t]); // Changed from [] to [t] to react to language changes? Actually better to re-register if t changes, or just let t dynamic?
+  // It's safer to not depend on t in effect if we want to avoid re-subscription loops, but t should be stable-ish.
+  // Actually, t function reference changes on language change.
+  // Let's keep it simple. The logs already emitted won't translate magically, but new ones will.
 
   useEffect(() => {
     if (audioRef.current) {
@@ -192,18 +215,29 @@ function App() {
   }, [audioVol]);
 
   const addLog = (message: string) => {
-    setLogs((prev) => [message, ...prev].slice(0, 12));
+    let translatedMessage = message;
+    try {
+      if (message.startsWith("{")) {
+        const parsed = JSON.parse(message);
+        if (parsed.key) {
+          translatedMessage = t(parsed.key, parsed.params || {});
+        }
+      }
+    } catch (e) {
+      // Not a JSON message, use as is
+    }
+    setLogs((prev) => [translatedMessage, ...prev].slice(0, 12));
   };
 
   const startAttack = (isQuick?: boolean) => {
     if (!target.trim()) {
-      alert("Please enter a target!");
+      alert(t("enter_target_alert"));
       return;
     }
 
     setIsAttacking(true);
     setStats((old) => ({ pps: 0, bots: old.bots, totalPackets: 0 }));
-    addLog("🍮 Preparing attack...");
+    addLog(t("preparing_attack"));
 
     // Play audio
     if (audioRef.current) {
@@ -215,11 +249,20 @@ function App() {
     if (!isQuick) setAnimState(1);
 
     // Start attack after audio intro
-    const timeout = setTimeout(() => {
-      setActuallyAttacking(true);
-      setAnimState(3);
-      mmbClient.startAttack({ target, packetSize, duration, packetDelay, attackMethod });
-    }, isQuick ? 700 : 10250);
+    const timeout = setTimeout(
+      () => {
+        setActuallyAttacking(true);
+        setAnimState(3);
+        mmbClient.startAttack({
+          target,
+          packetSize,
+          duration,
+          packetDelay,
+          attackMethod,
+        });
+      },
+      isQuick ? 700 : 10250,
+    );
     setCurrentTask(timeout);
   };
 
@@ -228,26 +271,47 @@ function App() {
     setIsAttacking(false);
   };
 
+
+
   return (
-    <div className={`w-screen h-screen bg-gradient-to-br ${animState === 0 || animState === 3 ? "from-pink-100 to-blue-100" : animState === 2 ? "background-pulse" : "bg-gray-950"} p-8 overflow-y-auto ${actuallyAttacking ? "shake" : ""}`}>
+    <div
+      className={`w-screen h-screen bg-gradient-to-br ${animState === 0 || animState === 3 ? "from-pink-100 to-blue-100" : animState === 2 ? "background-pulse" : "bg-gray-950"} p-8 overflow-y-auto ${actuallyAttacking ? "shake" : ""}`}
+    >
       <audio ref={audioRef} src="/audio.mp3" />
 
       <div className="max-w-2xl mx-auto space-y-8">
         <div className="text-center">
-          <h1 className="mb-2 text-4xl font-bold text-pink-500">Miku Miku Beam</h1>
+          <h1 className="mb-2 text-4xl font-bold text-pink-500">
+            {t("title")}
+          </h1>
           <div className="flex items-center justify-center gap-2 text-sm">
-            {socketState === 'connected' && (<span className="px-2 py-0.5 rounded bg-green-500 text-white">connected</span>)}
-            {socketState === 'connecting' && (<span className="px-2 py-0.5 rounded bg-yellow-500 text-white">connecting...</span>)}
-            {socketState === 'disconnected' && (<span className="px-2 py-0.5 rounded bg-red-500 text-white">disconnected {lastSocketError ? `(${lastSocketError})` : ''}</span>)}
+            {socketState === "connected" && (
+              <span className="px-2 py-0.5 rounded bg-green-500 text-white">
+                {t("connected")}
+              </span>
+            )}
+            {socketState === "connecting" && (
+              <span className="px-2 py-0.5 rounded bg-yellow-500 text-white">
+                {t("connecting")}
+              </span>
+            )}
+            {socketState === "disconnected" && (
+              <span className="px-2 py-0.5 rounded bg-red-500 text-white">
+                {t("disconnected_error", { error: lastSocketError })}
+              </span>
+            )}
           </div>
-          <p className={`${animState === 0 || animState === 3 ? "text-gray-600" : "text-white"}`}>
-            Because DDoS attacks are also cute and even more so when Miku does them.
+          <p
+            className={`${animState === 0 || animState === 3 ? "text-gray-600" : "text-white"}`}
+          >
+            {t("subtitle")}
           </p>
         </div>
 
         <div
-          className={`relative p-6 overflow-hidden rounded-lg shadow-xl ${animState === 0 || animState === 3 ? "bg-white" : "bg-gray-950"
-            }`}
+          className={`relative p-6 overflow-hidden rounded-lg shadow-xl ${
+            animState === 0 || animState === 3 ? "bg-white" : "bg-gray-950"
+          }`}
         >
           {/* Miku GIF */}
           <div
@@ -269,9 +333,10 @@ function App() {
                 type="text"
                 value={target}
                 onChange={(e) => setTarget(e.target.value)}
-                placeholder="Enter target URL or IP"
-                className={`${animState === 0 || animState === 3 ? "" : "text-white"
-                  } px-4 py-2 border border-pink-200 rounded-lg outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200`}
+                placeholder={t("target_placeholder")}
+                className={`${
+                  animState === 0 || animState === 3 ? "" : "text-white"
+                } px-4 py-2 border border-pink-200 rounded-lg outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200`}
                 disabled={isAttacking}
               />
               <div className="flex items-center gap-2">
@@ -279,15 +344,16 @@ function App() {
                   onClick={() => (isAttacking ? stopAttack() : startAttack())}
                   className={`
                   px-8 py-2 rounded-lg font-semibold text-white transition-all w-full
-                  ${isAttacking
+                  ${
+                    isAttacking
                       ? "bg-red-500 hover:bg-red-600"
                       : "bg-pink-500 hover:bg-pink-600"
-                    }
+                  }
                   flex items-center justify-center gap-2
                 `}
                 >
                   <Wand2 className="w-5 h-5" />
-                  {isAttacking ? "Stop Beam" : "Start Miku Beam"}
+                  {isAttacking ? t("stop_beam") : t("start_beam")}
                 </button>
                 <button
                   onClick={() =>
@@ -295,10 +361,11 @@ function App() {
                   }
                   className={`
                   px-2 py-2 rounded-lg font-semibold text-white transition-all
-                  ${isAttacking
+                  ${
+                    isAttacking
                       ? "bg-gray-500 hover:bg-red-600"
                       : "bg-cyan-500 hover:bg-cyan-600"
-                    }
+                  }
                   flex items-center justify-center gap-2
                 `}
                 >
@@ -316,18 +383,20 @@ function App() {
             <div className="grid grid-cols-4 gap-4">
               <div>
                 <label
-                  className={`block mb-1 text-sm font-medium ${animState === 0 || animState === 3
-                    ? "text-gray-700"
-                    : "text-white"
-                    }`}
+                  className={`block mb-1 text-sm font-medium ${
+                    animState === 0 || animState === 3
+                      ? "text-gray-700"
+                      : "text-white"
+                  }`}
                 >
-                  Attack Method
+                  {t("attack_method")}
                 </label>
                 <select
                   value={attackMethod}
                   onChange={(e) => setAttackMethod(e.target.value)}
-                  className={`${animState === 0 || animState === 3 ? "" : "text-gray-900"
-                    } w-full px-4 py-2 border border-pink-200 rounded-lg outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200`}
+                  className={`${
+                    animState === 0 || animState === 3 ? "" : "text-gray-900"
+                  } w-full px-4 py-2 border border-pink-200 rounded-lg outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200`}
                   disabled={isAttacking}
                 >
                   <option value="http_flood">HTTP/Flood</option>
@@ -339,19 +408,21 @@ function App() {
               </div>
               <div>
                 <label
-                  className={`block mb-1 text-sm font-medium ${animState === 0 || animState === 3
-                    ? "text-gray-700"
-                    : "text-white"
-                    }`}
+                  className={`block mb-1 text-sm font-medium ${
+                    animState === 0 || animState === 3
+                      ? "text-gray-700"
+                      : "text-white"
+                  }`}
                 >
-                  Packet Size (kb)
+                  {t("packet_size")}
                 </label>
                 <input
                   type="number"
                   value={packetSize}
                   onChange={(e) => setPacketSize(Number(e.target.value))}
-                  className={`${animState === 0 || animState === 3 ? "" : "text-white"
-                    } w-full px-4 py-2 border border-pink-200 rounded-lg outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200`}
+                  className={`${
+                    animState === 0 || animState === 3 ? "" : "text-white"
+                  } w-full px-4 py-2 border border-pink-200 rounded-lg outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200`}
                   disabled={isAttacking}
                   min="1"
                   max="1500"
@@ -359,19 +430,21 @@ function App() {
               </div>
               <div>
                 <label
-                  className={`block mb-1 text-sm font-medium ${animState === 0 || animState === 3
-                    ? "text-gray-700"
-                    : "text-white"
-                    }`}
+                  className={`block mb-1 text-sm font-medium ${
+                    animState === 0 || animState === 3
+                      ? "text-gray-700"
+                      : "text-white"
+                  }`}
                 >
-                  Duration (seconds)
+                  {t("duration")}
                 </label>
                 <input
                   type="number"
                   value={duration}
                   onChange={(e) => setDuration(Number(e.target.value))}
-                  className={`${animState === 0 || animState === 3 ? "" : "text-white"
-                    } w-full px-4 py-2 border border-pink-200 rounded-lg outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200`}
+                  className={`${
+                    animState === 0 || animState === 3 ? "" : "text-white"
+                  } w-full px-4 py-2 border border-pink-200 rounded-lg outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200`}
                   disabled={isAttacking}
                   min="1"
                   max="300"
@@ -379,19 +452,21 @@ function App() {
               </div>
               <div>
                 <label
-                  className={`block mb-1 text-sm font-medium ${animState === 0 || animState === 3
-                    ? "text-gray-700"
-                    : "text-white"
-                    }`}
+                  className={`block mb-1 text-sm font-medium ${
+                    animState === 0 || animState === 3
+                      ? "text-gray-700"
+                      : "text-white"
+                  }`}
                 >
-                  Packet Delay (ms)
+                  {t("packet_delay")}
                 </label>
                 <input
                   type="number"
                   value={packetDelay}
                   onChange={(e) => setPacketDelay(Number(e.target.value))}
-                  className={`${animState === 0 || animState === 3 ? "" : "text-white"
-                    } w-full px-4 py-2 border border-pink-200 rounded-lg outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200`}
+                  className={`${
+                    animState === 0 || animState === 3 ? "" : "text-white"
+                  } w-full px-4 py-2 border border-pink-200 rounded-lg outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200`}
                   disabled={isAttacking}
                   min="1"
                   max="1000"
@@ -405,13 +480,14 @@ function App() {
             <div className="p-4 rounded-lg bg-gradient-to-br from-pink-500/10 to-blue-500/10">
               <div className="flex items-center gap-2 mb-2 text-pink-600">
                 <Zap className="w-4 h-4" />
-                <span className="font-semibold">Packets/sec</span>
+                <span className="font-semibold">{t("pps")}</span>
               </div>
               <div
-                className={`text-2xl font-bold ${animState === 0 || animState === 3
-                  ? "text-gray-800"
-                  : "text-white"
-                  }`}
+                className={`text-2xl font-bold ${
+                  animState === 0 || animState === 3
+                    ? "text-gray-800"
+                    : "text-white"
+                }`}
               >
                 {stats.pps.toLocaleString()}
               </div>
@@ -419,13 +495,14 @@ function App() {
             <div className="p-4 rounded-lg bg-gradient-to-br from-pink-500/10 to-blue-500/10">
               <div className="flex items-center gap-2 mb-2 text-pink-600">
                 <Bot className="w-4 h-4" />
-                <span className="font-semibold">Active Bots</span>
+                <span className="font-semibold">{t("active_bots")}</span>
               </div>
               <div
-                className={`text-2xl font-bold ${animState === 0 || animState === 3
-                  ? "text-gray-800"
-                  : "text-white"
-                  }`}
+                className={`text-2xl font-bold ${
+                  animState === 0 || animState === 3
+                    ? "text-gray-800"
+                    : "text-white"
+                }`}
               >
                 {stats.bots.toLocaleString()}
               </div>
@@ -433,13 +510,14 @@ function App() {
             <div className="p-4 rounded-lg bg-gradient-to-br from-pink-500/10 to-blue-500/10">
               <div className="flex items-center gap-2 mb-2 text-pink-600">
                 <Wifi className="w-4 h-4" />
-                <span className="font-semibold">Total Packets</span>
+                <span className="font-semibold">{t("total_packets")}</span>
               </div>
               <div
-                className={`text-2xl font-bold ${animState === 0 || animState === 3
-                  ? "text-gray-800"
-                  : "text-white"
-                  }`}
+                className={`text-2xl font-bold ${
+                  animState === 0 || animState === 3
+                    ? "text-gray-800"
+                    : "text-white"
+                }`}
               >
                 {stats.totalPackets.toLocaleString()}
               </div>
@@ -464,7 +542,7 @@ function App() {
               ))}
               {logs.length === 0 && (
                 <div className="italic text-gray-500">
-                  {">"} Waiting for Miku's power...
+                  {">"} {t("waiting_log")}
                 </div>
               )}
             </div>
@@ -485,7 +563,7 @@ function App() {
 
         <div className="flex flex-col items-center">
           <span className="text-sm text-center text-gray-500">
-            🎵 v1.0 made by{" "}
+            🎵 {t("credits")}{" "}
             <a
               href="https://github.com/sammwyy/mikumikubeam"
               target="_blank"
@@ -494,19 +572,30 @@ function App() {
               @Sammwy
             </a>{" "}
             🎵
+          <span className="text-sm text-center text-gray-500">
+            {t("translated_by")}{" "}
+            <a
+              href="https://github.com/miguerubsk"
+              target="_blank"
+              rel="noreferrer"
+            >
+              @MigueRubSk
+            </a>
           </span>
-          <span>
-            <input
-              className="shadow-sm volume_bar focus:border-pink-500"
-              type="range"
-              min="0"
-              max="100"
-              step="5"
-              draggable="false"
-              value={audioVol}
-              onChange={(e) => setAudioVol(parseInt(e.target?.value))}
-            />
-          </span>
+          <div className="flex items-center gap-4 mt-2">
+            <span>
+              <input
+                className="shadow-sm volume_bar focus:border-pink-500"
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                draggable="false"
+                value={audioVol}
+                onChange={(e) => setAudioVol(parseInt(e.target?.value))}
+              />
+            </span>
+          </div>
         </div>
       </div>
     </div>

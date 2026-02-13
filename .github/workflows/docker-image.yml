@@ -1,4 +1,4 @@
-name: Docker Image CI/CD (Multi-Arch & GitHub Release)
+name: Docker Image Published
 
 on:
   push:
