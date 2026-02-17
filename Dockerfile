@@ -30,6 +30,11 @@
     
     # 3. Copiamos solo los binarios necesarios de la etapa anterior
     COPY --from=builder --chown=appuser:appgroup /app/bin ./bin
+
+    RUN chown -R root:appgroup ./bin && \
+        chmod -R 550 ./bin
+
+    RUN mkdir -p /app/data && chown -R appuser:appgroup /app/data
     
     # 4. Inicializamos los archivos de datos como el usuario appuser
     USER appuser
