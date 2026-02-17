@@ -3,6 +3,12 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { mmbClient } from "./lib/mmb-client";
 
+interface LogEntry {
+  key?: string;
+  params?: Record<string, any>;
+  text?: string;
+}
+
 function isHostLocal(host: string) {
   return (
     host === "localhost" ||
@@ -81,11 +87,16 @@ function ConfigureProxiesAndAgentsView() {
 }
 
 function App() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+
+  useEffect(() => {
+    document.documentElement.lang = i18n.language;
+    document.title = t("title");
+  }, [i18n.language, t]);
   const [isAttacking, setIsAttacking] = useState(false);
   const [actuallyAttacking, setActuallyAttacking] = useState(false);
   const [animState, setAnimState] = useState(0);
-  const [logs, setLogs] = useState<string[]>([]);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
   const [progress, setProgress] = useState(0);
   const [target, setTarget] = useState("");
   const [attackMethod, setAttackMethod] = useState("http_flood");
@@ -162,9 +173,31 @@ function App() {
     }
   }, [lastUpdatedPPS, lastTotalPackets, stats.totalPackets]);
 
+  const addLog = (message: string) => {
+    let entry: LogEntry = { text: message };
+    try {
+      if (message.startsWith("{")) {
+        const parsed = JSON.parse(message);
+        if (parsed.key) {
+          entry = { key: parsed.key, params: parsed.params || {} };
+        }
+      }
+    } catch (e) {
+      // Not a JSON message, use as is
+    }
+    setLogs((prev) => [entry, ...prev].slice(0, 12));
+  };
+
   useEffect(() => {
     // socket state handlers
-    setSocketState("connecting");
+    if (mmbClient.socket.connected) {
+      setSocketState("connected");
+      // If already connected, we likely missed the initial log event
+      addLog('{"key":"log_connected"}');
+    } else {
+      setSocketState("connecting");
+    }
+
     mmbClient.onConnect(() => {
       setSocketState("connected");
       setLastSocketError("");
@@ -214,21 +247,6 @@ function App() {
     }
   }, [audioVol]);
 
-  const addLog = (message: string) => {
-    let translatedMessage = message;
-    try {
-      if (message.startsWith("{")) {
-        const parsed = JSON.parse(message);
-        if (parsed.key) {
-          translatedMessage = t(parsed.key, parsed.params || {});
-        }
-      }
-    } catch (e) {
-      // Not a JSON message, use as is
-    }
-    setLogs((prev) => [translatedMessage, ...prev].slice(0, 12));
-  };
-
   const startAttack = (isQuick?: boolean) => {
     if (!target.trim()) {
       alert(t("enter_target_alert"));
@@ -270,8 +288,6 @@ function App() {
     mmbClient.stopAttack();
     setIsAttacking(false);
   };
-
-
 
   return (
     <div
@@ -537,7 +553,7 @@ function App() {
             <div className="text-green-400">
               {logs.map((log, index) => (
                 <div key={index} className="py-1">
-                  {`> ${log}`}
+                  {`> ${log.key ? t(log.key, log.params) : log.text}`}
                 </div>
               ))}
               {logs.length === 0 && (
@@ -572,14 +588,11 @@ function App() {
               @Sammwy
             </a>{" "}
             🎵
+          </span>
           <span className="text-sm text-center text-gray-500">
             {t("translated_by")}{" "}
-            <a
-              href="https://github.com/miguerubsk"
-              target="_blank"
-              rel="noreferrer"
-            >
-              @MigueRubSk
+            <a href={t("translator_url")} target="_blank" rel="noreferrer">
+              {t("translator_name")}
             </a>
           </span>
           <div className="flex items-center gap-4 mt-2">

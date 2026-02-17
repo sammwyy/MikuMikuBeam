@@ -15,6 +15,10 @@ i18n
     backend: {
       loadPath: "/locales/{{lng}}.json",
     },
+    detection: {
+      order: ["querystring", "navigator", "htmlTag"],
+      caches: [], // Disable caching to always detect from browser/url
+    },
   });
 
 export default i18n;

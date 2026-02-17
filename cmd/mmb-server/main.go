@@ -229,32 +229,6 @@ func main() {
 		}
 	}
 
-	// Custom locales handler (Cascading: data/locales -> internal)
-	e.GET("/locales/:file", func(c echo.Context) error {
-		file := c.Param("file")
-		// Basic directory traversal protection
-		if strings.Contains(file, "..") || strings.Contains(file, "/") || strings.Contains(file, "\\") {
-			return c.NoContent(http.StatusBadRequest)
-		}
-
-		// 1. Try user-mounted "data/locales"
-		userPath := filepath.Join("data", "locales", file)
-		if _, err := os.Stat(userPath); err == nil {
-			return c.File(userPath)
-		}
-
-		// 2. Try default built-in assets
-		if staticDir != "" {
-			defaultPath := filepath.Join(staticDir, "locales", file)
-			if _, err := os.Stat(defaultPath); err == nil {
-				return c.File(defaultPath)
-			}
-		}
-
-		return c.NoContent(http.StatusNotFound)
-	})
-
-	// Static file serving
 	if staticDir != "" {
 		e.Static("/", staticDir)
 		indexPath := filepath.Join(staticDir, "index.html")
