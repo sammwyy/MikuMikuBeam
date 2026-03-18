@@ -76,6 +76,8 @@ func FilterByMethod(proxies []engine.Proxy, method engine.AttackKind) []engine.P
 		engine.AttackHTTPSlowloris: {"socks4": true, "socks5": true},
 		engine.AttackTCPFlood:      {"socks4": true, "socks5": true},
 		engine.AttackMinecraftPing: {"socks4": true, "socks5": true},
+		engine.AttackUDPFlood:      {},
+		engine.AttackDNSFlood:      {},
 	}
 	allowedSet := allowed[method]
 	out := make([]engine.Proxy, 0, len(proxies))
