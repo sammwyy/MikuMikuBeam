@@ -19,6 +19,8 @@ import (
 	"github.com/sammwyy/mikumikubeam/internal/config"
 	"github.com/sammwyy/mikumikubeam/internal/engine"
 	"github.com/sammwyy/mikumikubeam/internal/proxy"
+	udpA "github.com/sammwyy/mikumikubeam/internal/attacks/udp"
+    dnsA "github.com/sammwyy/mikumikubeam/internal/attacks/dns"
 	targetpkg "github.com/sammwyy/mikumikubeam/pkg/target"
 )
 
@@ -61,6 +63,8 @@ func main() {
 		reg.Register(engine.AttackHTTPSlowloris, http.NewSlowlorisWorker())
 		reg.Register(engine.AttackTCPFlood, tcp.NewFloodWorker())
 		reg.Register(engine.AttackMinecraftPing, mc.NewPingWorker())
+		reg.Register(engine.AttackUDPFlood, udpA.NewFloodWorker())
+		reg.Register(engine.AttackDNSFlood, dnsA.NewFloodWorker())
 
 		eng := engine.NewEngine(*reg)
 
