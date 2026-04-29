@@ -70,6 +70,7 @@ cd mikumikubeam
 make prepare
 
 # 3. Create required files
+mkdir data
 echo "http://proxy1:8080" > data/proxies.txt
 echo "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" > data/uas.txt
 
